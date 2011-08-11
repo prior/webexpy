@@ -1,0 +1,45 @@
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by jim (WEBEX) -->
+<!-- edited with XML Spy v4.3 U (http://www.xmlspy.com) by LEGO (LEGO) -->
+<xsd:schema targetNamespace="http://www.webex.com/schemas/2002/06/service/supportsession" xmlns:att="http://www.webex.com/schemas/2002/06/service/attendee" xmlns:serv="http://www.webex.com/schemas/2002/06/service" xmlns:com="http://www.webex.com/schemas/2002/06/common" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:sc="http://www.webex.com/schemas/2002/06/service/supportsession" elementFormDefault="qualified">
+	<xsd:import namespace="http://www.webex.com/schemas/2002/06/common" schemaLocation="../../common/common.xsd"/>
+	<xsd:import namespace="http://www.webex.com/schemas/2002/06/service" schemaLocation="../service.xsd"/>
+	<!--SC management APIs-->
+	<xsd:complexType name="supportType">
+		<xsd:complexContent>
+			<xsd:extension base="serv:bodyContentType">
+				<xsd:sequence>
+					<xsd:element name="metaData" type="sc:metaDataType" minOccurs="0"/>
+					<xsd:element name="tracking" type="com:trackingType" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="supportInstanceType">
+		<xsd:complexContent>
+			<xsd:extension base="sc:supportType">
+				<xsd:sequence>
+					<xsd:element name="sessionKey" type="xsd:long"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="createSupportSession">
+		<xsd:complexContent>
+			<xsd:extension base="sc:supportType"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="createSupportSessionResponse">
+		<xsd:complexContent>
+			<xsd:extension base="serv:bodyContentType">
+				<xsd:sequence>
+					<xsd:element name="sessionKey" type="xsd:long" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="metaDataType">
+		<xsd:sequence>
+			<xsd:element name="sessionType" type="xsd:integer" default="-1" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

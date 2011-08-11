@@ -1,0 +1,13 @@
+WebEx Python Wrapper
+--------------------
+This module is intended to be a basic wrapper around the Cisco WebEx API. 
+--------------------
+
+Installation:
+--------------------
+Just run 'python setup.py build' and then 'python setup.py install' like any other python module
+--------------------
+
+
+Basic Usage
+-------------------
