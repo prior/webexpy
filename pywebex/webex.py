@@ -46,9 +46,12 @@ class WebEx(object):
     def getHeader(self):
         return self.header
     
-    def createEvent(self):
+    def createEvent(self,rdict):
         """Create meeting event"""
-                
+        builder=eventBuilder.CreateEvent(self.header, rdict)
+        xml= builder.getRequestXml()
+        self.makeRequest(xml)
+        return self.response        
 
     def getEvent(self, rdict):
         """Get meeting event information"""       
@@ -60,7 +63,10 @@ class WebEx(object):
     def setEvent(self):
         """Set meeting event"""
         requestbody= WebExBody("event:setEvent")  
-        pass
+        builder=eventBuilder.GetEvent(self.header, rdict)
+        xml=builder.getRequestXml()
+        self.makeRequest(xml)
+        return self.response
 
     def addAttendee(self):
         request=WebExBody("att:createMeetingAttedee")
