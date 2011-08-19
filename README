@@ -17,15 +17,26 @@
 
 WebEx Python Wrapper
 --------------------
-This module is intended to be a basic wrapper around the Cisco WebEx API. 
+Author:Victor Vu
+
+This module is intended to be a basic wrapper around the Cisco WebEx API. The intention is to simply the process of making a request to the API by abstracting the XML construction. 
 --------------------
+
+Requirements
+--------------------
+lxml is required to run this module. It's a bit of a pain to install on OSX but there's plenty of help out there on the interwebs.
 
 Installation:
 --------------------
 Just run 'python setup.py build' and then 'python setup.py install' like any other python module
 --------------------
 
-
 Basic Usage
-------------------
+-------------------
+1.
 
+
+
+Random Things
+--------------------
+This module is in no way complete. This is also my first serious foray into python so feel free to send in suggestions that might improve this project (and my Python conventions). .

@@ -1,6 +1,7 @@
 import webexBuilder as build
 
 class CreateEvent(build.WebExRequestBuilder):
+
     def __init__(self, head, rdict):
         self.header=head
         self.rdict=rdict
@@ -26,6 +27,7 @@ class CreateEvent(build.WebExRequestBuilder):
         else:
            timezone.text=self.rdict['timeZoneID']
         return schedule
+
     def createElementList(self):
         elist=[]
         elist.append(self.createSchedule())
@@ -39,7 +41,9 @@ class CreateEvent(build.WebExRequestBuilder):
         description= build.ET.SubElement(meta, "description")
         description.text=self.rdict["description"]
         return meta
+
 class GetEvent(build.WebExRequestBuilder):
+
     def __init__(self, head, rdict):
         self.header= head
         self.rdict=rdict
@@ -53,5 +57,12 @@ class GetEvent(build.WebExRequestBuilder):
         return body
 
 class setEvent(build.WebExRequestBuilder):
-    def __init__(self):
+
+    def __init__(self, rdict):
+        pass
+
+    def getBodyXml(self):
+        pass
+
+    def getMetaData(self):
         pass 

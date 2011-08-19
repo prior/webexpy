@@ -69,13 +69,25 @@ class WebEx(object):
         return self.response
 
     def addAttendee(self):
-        request=WebExBody("att:createMeetingAttedee")
+        """Add an attendee to the meeting"""
+        builder= attendeeBuilder.CreateMeetingAttendee(self.header, rdict)
+        xml=builder.getRequestXml()
+        self.makeRequest(xml)
+        return self.response
 
     def registerAttendee(self):
-        request=WebExBody("att:registerMeetingAttendee")
-
-    def createSchedule(self):
-        pass
+        """Registers an attendee to the meeting"""
+        builder=attendeeBuilder.RegisterMeetingAttendee(self.header, rdict)
+        xml= builder.getRequestXml()
+        self.makeRequest(xml)
+        return self.response
+    
+    def getMeetingAttendeeHistory(self):
+        """Gets the history of the meeting attendee in a webinar session"""
+        builder= historyBuilder.GetMeetingAttendeeHistory(self.header,rdict)
+        xml= builder.getRequestXml()
+        self.makeRequest(xml)
+        return self.response
 
     def parseResponse(self,res):
         parser=Parser.WebExResponseParser(res, None)
