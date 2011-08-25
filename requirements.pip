@@ -1,0 +1,7 @@
+# expecting to be run on python 2.6
+
+lxml==2.3
+nose==1.1.2
+pytz==2011h
+unittest2==0.5.1
+python-dateutil==1.5

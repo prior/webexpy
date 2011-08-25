@@ -14,7 +14,8 @@ from webex.event_controller import WebExEventController
 from webex.attendee_controller import WebExAttendeeController
 
 
-# temporarily comment out the below decoration to run
+# these integration tests are normally commented out so we don't incur their hits on every run of our test suite
+
 class WebExFlexApiTest(unittest2.TestCase):
     def setUp(self):
         info = json.loads(open(os.path.join(os.path.dirname(__file__),'test_integration_account.json')).read())
@@ -26,6 +27,7 @@ class WebExFlexApiTest(unittest2.TestCase):
         self.bad_site = WebEx('bad_webex_id', 'bad_password', site_name='bad_site_name', site_id='bad_site_id', email='bad_email@bad_email.com', debug=True)
         self.bad_creds = WebEx('bad_webex_id', 'bad_password', site_name=site_name, site_id=site_id, email=email, debug=True)
 
+    @unittest2.skip('integration')
     def test_bad_request(self):
         event_list = WebExEventController(self.bad_creds).list_events()
       
