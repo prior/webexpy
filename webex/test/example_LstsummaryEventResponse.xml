@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+  <serv:message xmlns:serv="http://www.webex.com/schemas/2002/06/service" xmlns:com="http://www.webex.com/schemas/2002/06/common" xmlns:event="http://www.webex.com/schemas/2002/06/service/event">
+  <serv:header>
+    <serv:response>
+      <serv:result>SUCCESS</serv:result>
+      <serv:gsbStatus>PRIMARY</serv:gsbStatus>
+    </serv:response>
+  </serv:header>
+  <serv:body>
+    <serv:bodyContent xsi:type="event:lstsummaryEventResponse" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <event:matchingRecords>
+        <serv:total>8</serv:total>
+        <serv:returned>3</serv:returned>
+        <serv:startFrom>1</serv:startFrom>
+      </event:matchingRecords>
+      <event:event>
+        <event:sessionKey>23357393</event:sessionKey>
+        <event:sessionName>ec 0000000000</event:sessionName>
+        <event:sessionType>9</event:sessionType>
+        <event:hostWebExID>bill</event:hostWebExID>
+        <event:startDate>04/03/2004 10:00:00</event:startDate>
+        <event:endDate>04/03/2004 11:00:00</event:endDate>
+        <event:timeZoneID>45</event:timeZoneID>
+        <event:duration>60</event:duration>
+        <event:description>xbxbxcxcbbsbsd</event:description>
+        <event:status>NOT_INPROGRESS</event:status>
+        <event:panelists>georgew</event:panelists>
+        <event:listStatus>PUBLIC</event:listStatus>
+      </event:event>
+      <event:event>
+        <event:sessionKey>77555295</event:sessionKey>
+        <event:sessionName>ec8888888</event:sessionName>
+        <event:sessionType>9</event:sessionType>
+        <event:hostWebExID>bill</event:hostWebExID>
+        <event:startDate>04/02/2004 01:06:49</event:startDate>
+        <event:endDate>04/02/2004 02:06:49</event:endDate>
+        <event:timeZoneID>4</event:timeZoneID>
+        <event:duration>60</event:duration>
+        <event:description>ascacacacaas</event:description>
+        <event:status>NOT_INPROGRESS</event:status>
+        <event:panelists />
+        <event:listStatus>PUBLIC</event:listStatus>
+      </event:event>
+      <event:event>
+        <event:sessionKey>11756692</event:sessionKey>
+        <event:sessionName>eventnagasdasd</event:sessionName>
+        <event:sessionType>9</event:sessionType>
+        <event:hostWebExID>bill</event:hostWebExID>
+        <event:startDate>04/02/2004 04:30:00</event:startDate>
+        <event:endDate>04/02/2004 05:30:00</event:endDate>
+        <event:timeZoneID>4</event:timeZoneID>
+        <event:duration>60</event:duration>
+        <event:description>fyugjgbuygigbhjkbk</event:description>
+        <event:status>NOT_INPROGRESS</event:status>
+        <event:panelists />
+        <event:listStatus>PUBLIC</event:listStatus>
+      </event:event>
+    </serv:bodyContent>
+  </serv:body>
+</serv:message>
+
