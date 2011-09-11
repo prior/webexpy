@@ -1,6 +1,7 @@
 from lxml import etree
 import urllib2
 import pprint
+from error import WebExError
 
 from utils import SERVICE_NS
 
@@ -18,9 +19,10 @@ class WebExResponse(object):
                 print("\n=========== REQUEST \n%s\n\n" % self.webex_request.msg)
             try:
                 self.raw_response = urllib2.urlopen(self.webex_request.raw_request).read()
-            except Exception, e:
-                print e
-                self.exception = e
+            except urllib2.URLError, err:
+                raise WebExError, "Unable to open url: %s  [%s]" % (webex_request.url, str(err))
+                #print e
+                #self.exception = e
         self.parse()
 
     def parse(self):
@@ -44,6 +46,9 @@ class WebExResponse(object):
         value_elem = response_elem.find("{%s}value"%SERVICE_NS)
         if value_elem is not None:
             self.value = value_elem.text
+
+        if getattr(self, 'exception_id', None):
+            raise WebExError, "Failure Response from Webex: %s [remote exceptionID: %s]" % (getattr(self,'reason','?'), self.exception_id) 
         #TODO: implement subError gathering as well!
         return self.success
 

@@ -4,12 +4,12 @@ import datetime
 import dateutil.parser
 import pytz
 import pprint
-
+import re
+from error import WebExError
 
 from utils import is_blank
 from request import WebExRequest
 from response import WebExResponse
-
 
 class WebEx(object):
 
@@ -30,6 +30,8 @@ class WebEx(object):
         site_id or site_name are required, if both specified, then site_name is used
         if webex_id and email both specified, then email is used -- not sure what that means?
         """
+        if site_name and not re.compile(r'^[-a-zA-Z0-9_]*$').match(site_name):
+            raise WebExError, "site_name is invalid!  It is expected to be an alphanumeric string."
         self.webex_id = webex_id
         self.password = password
         self.site_id = site_id
@@ -37,6 +39,7 @@ class WebEx(object):
         self.partner_id = partner_id
         self.email = email
         self.debug = debug
+  
         self.request_xml = self.build_request_xml()
 
     def get_api_version(self):
@@ -69,6 +72,4 @@ class WebEx(object):
     def query(self, body_content):
         return WebExResponse(WebExRequest(self, body_content), debug=self.debug)
 
-
- 
 

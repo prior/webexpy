@@ -1,0 +1,4 @@
+class WebExError(ValueError):
+    pass
+
+ 
