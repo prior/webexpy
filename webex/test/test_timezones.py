@@ -1,6 +1,8 @@
 import unittest2
 import datetime
-import pprint
+import time
+import calendar
+from pprint import pprint
 import pytz
 
 from webex.timezone import WebExTimezone, WEBEX_TIMEZONE_DATA
@@ -12,9 +14,20 @@ class WebExTimezoneTest(unittest2.TestCase):
             if tzlabel is not None:
                 self.assertEquals(id,WebExTimezone(tzinfo=WebExTimezone(id).tzinfo).id)
 
+    # HOLY FUCKING SHIT -- PYTHON DATE/TIME IS A COMPLETE CLUSTERFUCK
+    def test_utc_conversions_across_all_timezones(self):
+        for id, webexlabel, tzlabel in WEBEX_TIMEZONE_DATA:
+            if tzlabel is not None:
+                webex_tz = WebExTimezone(id)
+                for month in xrange(12): # to test dst and std times
+                    expected_utc_seconds = calendar.timegm(datetime.datetime(2011,month+1,1,tzinfo=pytz.utc).timetuple())
+                    actual = webex_tz.utc_timestamp_from_localized_datetime(webex_tz.localized_datetime_from_utc_timestamp(expected_utc_seconds))
+                    self.assertEquals(expected_utc_seconds, actual)
+
     def test_localize_new_naive_datetime(self):
         for month in xrange(12): # to test dst and std times
             expected = pytz.timezone('America/New_York').localize(datetime.datetime(2011,month+1,1))
+            pprint(expected)
             actual = WebExTimezone(11).localize_new_naive_datetime(2011,month+1,1)
             self.assertEquals(expected, actual)
 

@@ -30,8 +30,6 @@ class WebEx(object):
         site_id or site_name are required, if both specified, then site_name is used
         if webex_id and email both specified, then email is used -- not sure what that means?
         """
-        if site_name and not re.compile(r'^[-a-zA-Z0-9_]*$').match(site_name):
-            raise WebExError, "site_name is invalid!  It is expected to be an alphanumeric string."
         self.webex_id = webex_id
         self.password = password
         self.site_id = site_id
@@ -51,12 +49,14 @@ class WebEx(object):
 
         
     def build_request_xml(self):
+        if self.site_name and not re.compile(r'^[-a-zA-Z0-9_]*$').match(self.site_name):
+            raise WebExError, "site_name is invalid!  It is expected to be an alphanumeric string."
         if is_blank(self.webex_id):
-            raise Exception("Expected a webexId for API request validations, but did not receive one!")
+            raise WebExError, "Expected a webexId for API request validations, but did not receive one!"
         if is_blank(self.password):
-            raise Exception("Expected a password for API request validations, but did not receive one!")
+            raise WebExError, "Expected a password for API request validations, but did not receive one!"
         if is_blank(self.site_id) and is_blank(self.site_name):
-            raise Exception("Expected a siteId or a siteName for API request validations, but did not receive one!")
+            raise WebExError, "Expected a siteId or a siteName for API request validations, but did not receive one!"
         securitySection = "\n<webExID>%s</webExID>" % self.webex_id
         securitySection += "\n<password>%s</password>" % self.password
         if is_blank(self.site_name):

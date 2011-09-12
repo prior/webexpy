@@ -1,6 +1,8 @@
 from lxml import etree
 import urllib2
 import datetime
+import time
+import calendar
 import dateutil.parser
 import pytz
 import pprint
@@ -95,10 +97,16 @@ class WebExTimezone(object):
     def localize_new_naive_datetime(self, year, month, day, hour=0, minute=0, second=0, microsecond=0):
         return self.tzinfo.localize(datetime.datetime(year,month,day,hour,minute,second,microsecond))
 
+    def localized_datetime_from_utc_timestamp(self, utc_seconds):
+        return datetime.datetime.utcfromtimestamp(utc_seconds).replace(tzinfo=pytz.utc).astimezone(self.tzinfo)
+
+    def utc_timestamp_from_localized_datetime(self, dt):
+        return calendar.timegm(pytz.utc.normalize(dt.astimezone(pytz.utc)).timetuple())
+
     def localize_naive_datetime(self, naive_datetime):
         return self.tzinfo.localize(naive_datetime)
 
+    @classmethod
     def from_localized_datetime(cls, localized_datetime):
         return WebExTimezone(tzinfo=pytz.timezone(localized_datetime.tzinfo.zone))
-    from_localized_datetime = classmethod(from_localized_datetime)
   
