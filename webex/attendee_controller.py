@@ -80,7 +80,7 @@ class WebExAttendeeController(object):
         return False
 
     def list_attendees(self, event):
-        if event.start_datetime.astimezone(pytz.utc) > pytz.utc.localize(datetime.datetime.utcnow()):
+        if event.start_datetime.astimezone(pytz.utc).replace(tzinfo=None) > datetime.datetime.utcnow():
             return self.list_enrolled_attendees(event)
         lst = self.list_enrolled_attendees(event) + self.list_attended_attendees(event)
         h = {}
