@@ -69,7 +69,8 @@ class WebExEventController(object):
                 duration = int(elem.find("{%s}duration"%EVENT_NS).text)
                 description = elem.find("{%s}description"%EVENT_NS).text
                 session_key = elem.find("{%s}sessionKey"%EVENT_NS).text
-                events.append(WebExEvent(session_name, WebExTimezone(timezone_id).localize_naive_datetime(start_datetime), duration, description, session_key))
+                event = WebExEvent(session_name, WebExTimezone(timezone_id).localize_naive_datetime(start_datetime), duration, description, session_key)
+                events.append(event)
             return events
         return False
 
