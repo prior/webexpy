@@ -46,6 +46,18 @@ class WebExEventController(object):
                 return True
         return False
 
+    def delete_event(self, event):
+        xml = """
+<bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent">
+  <sessionKey>%s</sessionKey>
+</bodyContent>
+"""
+        xml %= event.session_key
+        response = self.webex.query(xml)
+        if response.success:
+            return True
+        return False
+
     def list_events(self):
         xml = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">
