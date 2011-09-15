@@ -18,7 +18,7 @@ UNITTEST_EVENT_DESCRIPTION = """This is a fake/dummy webinar event created by th
 
 class EventControllerTest(unittest2.TestCase):
 
-#    @unittest2.skip('integration')
+    @unittest2.skip('integration')
     def setUp(self):
         self.webex = helper.webex_from_test_credentials()
         self.event_controller = WebExEventController(self.webex)
