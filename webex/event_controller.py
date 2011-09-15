@@ -43,7 +43,7 @@ class WebExEventController(object):
             elem = response.body_content.find("{%s}sessionKey"%EVENT_NS)
             if elem is not None:
                 event.session_key = elem.text
-                return True
+            return event
         return False
 
     def delete_event(self, event):
@@ -55,7 +55,7 @@ class WebExEventController(object):
         xml %= event.session_key
         response = self.webex.query(xml)
         if response.success:
-            return True
+            return event
         return False
 
     def list_events(self):

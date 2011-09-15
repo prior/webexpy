@@ -27,6 +27,7 @@ def webex_from_creds(creds):
         debug = True)
 
 class WebExFlexApiTest(unittest2.TestCase):
+    @unittest2.skip('integration')
     def setUp(self):
         self.creds = { 'webex_id':None, 'password':None, 'site_name':None, 'site_id':None, 'email':None, 'partner_id':None }
         try:
@@ -39,7 +40,6 @@ class WebExFlexApiTest(unittest2.TestCase):
             self.fail("'test_account.json' doesn't appear to be valid json!\n  These test rely on the existence of that file and on it having valid webex credentials.")
         self.webex = webex_from_creds(self.creds)
 
-    @unittest2.skip('integration')
     def test_bad_credentials(self):
         self.creds['webex_id'] = 'bad_webex_id'
         self.creds['password'] = 'bad_password'
