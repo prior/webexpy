@@ -33,6 +33,18 @@ class WebExAttendeeController(object):
                 return True
         return False
     
+    def delete_attendee(self, attendee):
+        xml = """
+<bodyContent xsi:type= "java:com.webex.service.binding.attendee.DelMeetingAttendee">
+  <attendeeID>%s</attendeeID>
+</bodyContent>
+"""
+        xml %= self.attendee.id
+        response = self.webex.query(xml)
+        if response.success:
+            return attendee
+        return False
+
     def list_enrolled_attendees(self, event):
         xml = """
 <bodyContent xsi:type="java:com.webex.service.binding.attendee.LstMeetingAttendee">
