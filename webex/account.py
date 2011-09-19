@@ -29,9 +29,9 @@ class Account(object):
         self.site_name = site_name
         self.partner_id = partner_id
         self.email = email
-        self.request_xml_template = self.generate_request_xml_template()
+        self.request_xml_template = self.rebuild_request_xml_template()
 
-    def generate_request_xml_template(self):
+    def rebuild_request_xml_template(self):
         if self.site_name and not re.compile(r'^[-a-zA-Z0-9_]*$').match(self.site_name):
             raise WebExError, "site_name is invalid!  It is expected to be an alphanumeric string."
         if is_blank(self.webex_id):

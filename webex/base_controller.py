@@ -9,6 +9,7 @@ import re
 from utils import is_blank
 from request import Request
 from response import Response
+from utils import EP_NS
 
 class BaseController(object):
 

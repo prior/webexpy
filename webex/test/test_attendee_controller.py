@@ -16,7 +16,8 @@ import helper
 
 class AttendeeControllerTest(unittest2.TestCase):
 
-# these integration tests are normally commented out so we don't incur their hits on every run of our test suite
+    # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
+    @unittest2.skip('integration')
     def setUp(self):
         self.account = helper.get_account()
         self.event_controller = EventController(self.account)
