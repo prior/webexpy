@@ -2,9 +2,8 @@ import pprint
 
 from utils import is_blank
 
-class WebExAttendee(object):
+class Attendee(object):
     def __init__(self, email=None, first_name=None, last_name=None, event=None, start_datetime=None, end_datetime=None, duration=None, ip_address=None, id=None):
-    #def __init__(self, email, start_datetime, end_datetime, invited=0, registered=0):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name

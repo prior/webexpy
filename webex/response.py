@@ -6,23 +6,22 @@ from error import WebExError
 from utils import SERVICE_NS
 
 
-class WebExResponse(object):
-    def __init__(self, webex_request, xml_override=None, debug=False):
-        self.webex_request = webex_request
+class Response(object):
+    def __init__(self, request, xml_override=None, debug=False, empty_list_ok=False):
+        self.request = request
         self.debug = debug
+        self.empty_list_ok = empty_list_ok
         self.raw_response = self.exception = None
         self.success = False
         if xml_override is not None:
             self.raw_response = xml_override
         else:
             if self.debug:
-                print("\n=========== REQUEST \n%s\n\n" % self.webex_request.msg)
+                print("\n=========== REQUEST \n%s\n\n" % self.request.msg)
             try:
-                self.raw_response = urllib2.urlopen(self.webex_request.raw_request).read()
+                self.raw_response = urllib2.urlopen(self.request.raw_request).read()
             except urllib2.URLError, err:
-                raise WebExError, "Unable to open url: %s  [%s]" % (webex_request.url, str(err))
-                #print e
-                #self.exception = e
+                raise WebExError, "Unable to open url: %s  [%s]" % (self.request.url, str(err))
         self.parse()
 
     def parse(self):
@@ -39,7 +38,7 @@ class WebExResponse(object):
         self.gsb_status = response_elem.find("{%s}gsbStatus"%SERVICE_NS).text
         exception_id_elem = response_elem.find("{%s}exceptionID"%SERVICE_NS)
         if exception_id_elem is not None:
-            self.exception_id = exception_id_elem.text
+            self.exception_id = int(exception_id_elem.text)
         reason_elem = response_elem.find("{%s}reason"%SERVICE_NS)
         if reason_elem is not None:
             self.reason = reason_elem.text
@@ -47,7 +46,9 @@ class WebExResponse(object):
         if value_elem is not None:
             self.value = value_elem.text
 
-        if getattr(self, 'exception_id', None):
+        if getattr(self, 'exception_id', None) != None:
+            if self.empty_list_ok and self.exception_id==15:
+                return True
             raise WebExError, "Failure Response from Webex: %s [remote exceptionID: %s]" % (getattr(self,'reason','?'), self.exception_id) 
         #TODO: implement subError gathering as well!
         return self.success

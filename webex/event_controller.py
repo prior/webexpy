@@ -5,16 +5,17 @@ import dateutil.parser
 import pytz
 import pprint
 
-from event import WebExEvent
-from timezone import WebExTimezone
+from event import Event
+from timezone import Timezone
 from utils import EVENT_NS
+from base_controller import BaseController
 
 
-class WebExEventController(object):
-    def __init__(self, webex):
-        self.webex = webex
-    
-    def create_event(self, event):
+class EventController(BaseController):
+    def __init__(self, account, debug=False):
+        super(EventController, self).__init__(account,debug)
+
+    def create(self, event):
         xml = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">
   <accessControl>
@@ -35,10 +36,10 @@ class WebExEventController(object):
         xml %= (
             event.start_datetime.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
-            WebExTimezone.from_localized_datetime(event.start_datetime).id,
+            Timezone.from_localized_datetime(event.start_datetime).id,
             event.session_name,
             event.description)
-        response = self.webex.query(xml)
+        response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}sessionKey"%EVENT_NS)
             if elem is not None:
@@ -46,19 +47,19 @@ class WebExEventController(object):
             return event
         return False
 
-    def delete_event(self, event):
+    def delete(self, event):
         xml = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent">
   <sessionKey>%s</sessionKey>
 </bodyContent>
 """
         xml %= event.session_key
-        response = self.webex.query(xml)
+        response = self.query(xml)
         if response.success:
             return event
         return False
 
-    def list_events(self):
+    def list(self):
         xml = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">
   <listControl>
@@ -71,7 +72,7 @@ class WebExEventController(object):
   </order>
 </bodyContent>
 """
-        response = self.webex.query(xml)
+        response = self.query(xml)
         events = []
         if response.success:
             for elem in response.body_content.findall("{%s}event"%EVENT_NS):
@@ -81,7 +82,7 @@ class WebExEventController(object):
                 duration = int(elem.find("{%s}duration"%EVENT_NS).text)
                 description = elem.find("{%s}description"%EVENT_NS).text
                 session_key = elem.find("{%s}sessionKey"%EVENT_NS).text
-                event = WebExEvent(session_name, WebExTimezone(timezone_id).localize_naive_datetime(start_datetime), duration, description, session_key)
+                event = Event(session_name, Timezone(timezone_id).localize_naive_datetime(start_datetime), duration, description, session_key)
                 events.append(event)
             return events
         return False

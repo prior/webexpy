@@ -1,68 +1,78 @@
 import unittest2
 import uuid
+import os
 from datetime import datetime
 from datetime import timedelta
 import pytz
 import pprint
 
-from webex.webex import WebEx, WebExError
-from webex.event import WebExEvent
-from webex.event_controller import WebExEventController
+from webex.error import WebExError
+from webex.event import Event
+from webex.event_controller import EventController
+from webex.timezone import Timezone
 
 import helper
 
 
 # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
-
-UNITTEST_EVENT_DESCRIPTION = """This is a fake/dummy webinar event created by the unittest system to verify the WebEx systems are operational.  These events are normally deleted immediately after creation, but in the case that you are reading this, then something got screwed up.  Feel free to delete manually, however, we are very likely aware and on the case and will be cleaning up these fake events shortly."""
-
 class EventControllerTest(unittest2.TestCase):
 
-    @unittest2.skip('integration')
     def setUp(self):
-        self.webex = helper.webex_from_test_credentials()
-        self.event_controller = WebExEventController(self.webex)
+        self.account = helper.get_account()
+        self.event_controller = EventController(self.account, debug=False)
 
-    def test_list_events(self):
-        new_events = [self.dummy_event(), self.dummy_event()]
-        session_keys = [ev.session_key for ev in self.event_controller.list_events()]
+    def test_list(self):
+        new_events = [helper.generate_event(), helper.generate_event()]
+        session_keys = [ev.session_key for ev in self.event_controller.list()]
         for ev in new_events:
             self.assertNotIn(ev.session_key, session_keys)
-            self.event_controller.create_event(ev)
-        session_keys = [ev.session_key for ev in self.event_controller.list_events()]
+            self.event_controller.create(ev)
+        session_keys = [ev.session_key for ev in self.event_controller.list()]
         for ev in new_events:
             self.assertIn(ev.session_key, session_keys)
-            self.event_controller.delete_event(ev)
+            self.event_controller.delete(ev)
 
     def test_good_create(self):
-        event = self.dummy_event()
+        event = helper.generate_event()
         self.assertIsNone(event.session_key)
-        self.assertEquals(event, self.event_controller.create_event(event))
-        session_keys = [ev.session_key for ev in self.event_controller.list_events()]
+        self.assertEquals(event, self.event_controller.create(event))
+        session_keys = [ev.session_key for ev in self.event_controller.list()]
         self.assertTrue(event.session_key)
         self.assertTrue(event.session_key in session_keys)
-        self.event_controller.delete_event(event)
+        self.event_controller.delete(event)
 
     def test_bad_create(self):
-        event = self.dummy_event(-10005) #an event in the past
+        event = helper.generate_event(-10005) #an event in the past that should make the create fail
         with self.assertRaises(WebExError):
-            self.event_controller.create_event(event)
+            self.event_controller.create(event)
 
     def test_bad_delete(self):
         with self.assertRaises(WebExError):
-            self.event_controller.delete_event(WebExEvent(session_key='garbage82uiu988h32983y34'))
+            self.event_controller.delete(Event(session_key='garbage82uiu988h32983y34'))
 
     def test_good_delete(self):
-        event = self.event_controller.create_event(self.dummy_event())
+        event = self.event_controller.create(helper.generate_event())
         self.assertTrue(event)
-        self.assertEquals(event,self.event_controller.delete_event(event))
+        self.assertEquals(event,self.event_controller.delete(event))
 
-    def dummy_event(self, minute_distance = 15):
-        utc_future = (datetime.utcnow()+timedelta(minutes = minute_distance)).replace(tzinfo=pytz.utc)
-        eastern = pytz.timezone('America/New_York')
-        starts_at = utc_future.astimezone(eastern)
-        title = "Dummy UnitTest Event [%s]" % str(uuid.uuid4())[0:16]
-        return WebExEvent(title, starts_at, 90, UNITTEST_EVENT_DESCRIPTION)
+    def test_list_response_parsing(self):
+        self.event_controller.xml_override = open(os.path.join(os.path.dirname(__file__),'example_LstsummaryEventResponse.xml')).read()
+        event_list = self.event_controller.list()
+        self.assertEqual(3, len(event_list))
+        event = event_list[0]
+        self.assertIsNotNone(event)
+        self.assertEquals("ec 0000000000", event.session_name)
+        self.assertEquals(Timezone(45).localize_new_naive_datetime(2004,4,3,10), event.start_datetime)
+        self.assertEquals(60, event.duration)
+        self.assertEquals('xbxbxcxcbbsbsd', event.description)
+        self.assertEquals('23357393', event.session_key)
+
+    def test_create_response_parsing(self):
+        self.event_controller.xml_override = open(os.path.join(os.path.dirname(__file__),'example_CreateEventResponse.xml')).read()
+        event = Event("ec 000000000", Timezone(45).localize_new_naive_datetime(2004,4,3,10), 60, 'xbxbxbxbxxxbx')
+        self.assertIsNone(event.session_key)
+        self.event_controller.create(event)
+        self.assertIsNotNone(event.session_key)
         
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ import pytz
 import pprint
 
 
-WEBEX_TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
+TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
     (0, 'GMT-12:00, Dateline (Eniwetok)', None), # has no standard pytz label available
     (1, 'GMT-11:00, Samoa (Samoa)', 'Pacific/Apia'), # GMT-11:00 Samoa best guess
     (2, 'GMT-10:00, Hawaii (Honolulu)', 'Pacific/Honolulu'),
@@ -74,25 +74,25 @@ WEBEX_TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_la
 )
 
 # build id to tzinfo map
-WEBEX_TIMEZONE_ID_TO_TZINFO_MAP = {}
-for timezone_id, webex_label, tz_label in WEBEX_TIMEZONE_DATA:
+TIMEZONE_ID_TO_TZINFO_MAP = {}
+for timezone_id, webex_label, tz_label in TIMEZONE_DATA:
     if tz_label is not None:
-        WEBEX_TIMEZONE_ID_TO_TZINFO_MAP[timezone_id] = pytz.timezone(tz_label)
+        TIMEZONE_ID_TO_TZINFO_MAP[timezone_id] = pytz.timezone(tz_label)
 
 # build tzinfo to id map
-TZINFO_TO_WEBEX_TIMEZONE_ID_MAP = {}
-for timezone_id, webex_label, tz_label in WEBEX_TIMEZONE_DATA:
+TZINFO_TO_TIMEZONE_ID_MAP = {}
+for timezone_id, webex_label, tz_label in TIMEZONE_DATA:
     if tz_label is not None:
-        TZINFO_TO_WEBEX_TIMEZONE_ID_MAP[pytz.timezone(tz_label)] = timezone_id
+        TZINFO_TO_TIMEZONE_ID_MAP[pytz.timezone(tz_label)] = timezone_id
 
-class WebExTimezone(object):
+class Timezone(object):
     def __init__(self, id=None, tzinfo=None):
         self.id = id
         self.tzinfo = tzinfo
         if self.id is None:
-            self.id = TZINFO_TO_WEBEX_TIMEZONE_ID_MAP[self.tzinfo]
+            self.id = TZINFO_TO_TIMEZONE_ID_MAP[self.tzinfo]
         if self.tzinfo is None:
-            self.tzinfo = WEBEX_TIMEZONE_ID_TO_TZINFO_MAP[self.id]
+            self.tzinfo = TIMEZONE_ID_TO_TZINFO_MAP[self.id]
 
     def localize_new_naive_datetime(self, year, month, day, hour=0, minute=0, second=0, microsecond=0):
         return self.tzinfo.localize(datetime.datetime(year,month,day,hour,minute,second,microsecond))
@@ -108,5 +108,5 @@ class WebExTimezone(object):
 
     @classmethod
     def from_localized_datetime(cls, localized_datetime):
-        return WebExTimezone(tzinfo=pytz.timezone(localized_datetime.tzinfo.zone))
+        return Timezone(tzinfo=pytz.timezone(localized_datetime.tzinfo.zone))
   

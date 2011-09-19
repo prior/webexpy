@@ -5,20 +5,20 @@ import calendar
 from pprint import pprint
 import pytz
 
-from webex.timezone import WebExTimezone, WEBEX_TIMEZONE_DATA
+from webex.timezone import Timezone, TIMEZONE_DATA
 
-class WebExTimezoneTest(unittest2.TestCase):
+class TimezoneTest(unittest2.TestCase):
 
     def test_tzinfo_existence(self):
-        for id, webexlabel, tzlabel in WEBEX_TIMEZONE_DATA:
+        for id, webexlabel, tzlabel in TIMEZONE_DATA:
             if tzlabel is not None:
-                self.assertEquals(id,WebExTimezone(tzinfo=WebExTimezone(id).tzinfo).id)
+                self.assertEquals(id,Timezone(tzinfo=Timezone(id).tzinfo).id)
 
     # HOLY FUCKING SHIT -- PYTHON DATE/TIME IS A COMPLETE CLUSTERFUCK
     def test_utc_conversions_across_all_timezones(self):
-        for id, webexlabel, tzlabel in WEBEX_TIMEZONE_DATA:
+        for id, webexlabel, tzlabel in TIMEZONE_DATA:
             if tzlabel is not None:
-                webex_tz = WebExTimezone(id)
+                webex_tz = Timezone(id)
                 for month in xrange(12): # to test dst and std times
                     expected_utc_seconds = calendar.timegm(datetime.datetime(2011,month+1,1,tzinfo=pytz.utc).timetuple())
                     actual = webex_tz.utc_timestamp_from_localized_datetime(webex_tz.localized_datetime_from_utc_timestamp(expected_utc_seconds))
@@ -28,20 +28,20 @@ class WebExTimezoneTest(unittest2.TestCase):
         for month in xrange(12): # to test dst and std times
             expected = pytz.timezone('America/New_York').localize(datetime.datetime(2011,month+1,1))
             pprint(expected)
-            actual = WebExTimezone(11).localize_new_naive_datetime(2011,month+1,1)
+            actual = Timezone(11).localize_new_naive_datetime(2011,month+1,1)
             self.assertEquals(expected, actual)
 
     def test_localize_naive_datetime(self):
         for month in xrange(12): # to test dst and std times
             naive_datetime = datetime.datetime(2011,month+1,1)
             expected = pytz.timezone('America/New_York').localize(datetime.datetime(2011,month+1,1))
-            actual = WebExTimezone(11).localize_naive_datetime(naive_datetime)
+            actual = Timezone(11).localize_naive_datetime(naive_datetime)
             self.assertEquals(expected, actual)
 
     def test_from_localized_datetime(self):
         for month in xrange(12): # to test dst and std times
             local_datetime = pytz.timezone('America/New_York').localize(datetime.datetime(2011,month+1,1))
-            webex_timezone = WebExTimezone.from_localized_datetime(local_datetime)
+            webex_timezone = Timezone.from_localized_datetime(local_datetime)
             self.assertEquals(11, webex_timezone.id)
 
 if __name__ == '__main__':
