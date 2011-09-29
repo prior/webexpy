@@ -7,11 +7,13 @@ import pprint
 from utils import ATTENDEE_NS,HISTORY_NS,COMMON_NS
 from base_controller import BaseController
 from attendee import Attendee
+from event import Event
 
 
 class AttendeeController(BaseController):
-    def __init__(self, account, debug=False):
+    def __init__(self, account, event, debug=False):
         super(AttendeeController, self).__init__(account,debug)
+        self.event = event
 
     def create(self,attendee):
         xml = """

@@ -3,7 +3,6 @@ from error import WebExError
 from utils import is_blank
 
 
-
 REQUEST_XML_PRE_TEMPLATE = """
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <serv:message xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">

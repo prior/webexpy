@@ -1,17 +1,7 @@
 import unittest2
-import uuid
-import os
-from datetime import datetime
-from datetime import timedelta
-import pytz
-import pprint
-
 from webex.error import WebExError
-from webex.event import Event
 from webex.base_controller import BaseController
 from webex.event_controller import EventController
-from webex.timezone import Timezone
-
 import helper
 
 # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
