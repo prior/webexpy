@@ -1,6 +1,5 @@
 from lxml import etree
 import urllib2
-import pprint
 from error import WebExError
 
 from utils import SERVICE_NS

@@ -1,10 +1,4 @@
-from lxml import etree
 import urllib2
-import datetime
-import dateutil.parser
-import pytz
-import pprint
-
 
 class Request(object):
     def __init__(self, account, body_content):

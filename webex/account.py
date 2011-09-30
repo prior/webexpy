@@ -28,7 +28,7 @@ class Account(object):
         self.site_name = site_name
         self.partner_id = partner_id
         self.email = email
-        self.request_xml_template = self.rebuild_request_xml_template()
+        self.rebuild_request_xml_template()
 
     def rebuild_request_xml_template(self):
         if self.site_name and not re.compile(r'^[-a-zA-Z0-9_]*$').match(self.site_name):
@@ -49,5 +49,6 @@ class Account(object):
             securitySection += "\n<partnerID>%s</partnerID>" % self.partner_id
         if not is_blank(self.email):
             securitySection += "\n<email>%s</email>" % self.email
-        return REQUEST_XML_PRE_TEMPLATE.strip() % (securitySection, '%s')
+        self.request_xml_template = REQUEST_XML_PRE_TEMPLATE.strip() % (securitySection, '%s')
+        return self.request_xml_template
         

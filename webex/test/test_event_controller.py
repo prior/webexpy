@@ -1,10 +1,6 @@
 import unittest2
-import uuid
+from nose.plugins.attrib import attr
 import os
-from datetime import datetime
-from datetime import timedelta
-import pytz
-import pprint
 
 from webex.error import WebExError
 from webex.event import Event
@@ -17,11 +13,11 @@ import helper
 class EventControllerTest(unittest2.TestCase):
 
     # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
-    @unittest2.skip('integration')
     def setUp(self):
         self.account = helper.get_account()
         self.event_controller = EventController(self.account, debug=False)
 
+    @attr('api')
     def test_list(self):
         new_events = [helper.generate_event(), helper.generate_event()]
         session_keys = [ev.session_key for ev in self.event_controller.list()]
@@ -33,6 +29,7 @@ class EventControllerTest(unittest2.TestCase):
             self.assertIn(ev.session_key, session_keys)
             self.event_controller.delete(ev)
 
+    @attr('api')
     def test_good_create(self):
         event = helper.generate_event()
         self.assertIsNone(event.session_key)
@@ -42,15 +39,18 @@ class EventControllerTest(unittest2.TestCase):
         self.assertTrue(event.session_key in session_keys)
         self.event_controller.delete(event)
 
+    @attr('api')
     def test_bad_create(self):
         event = helper.generate_event(-10005) #an event in the past that should make the create fail
         with self.assertRaises(WebExError):
             self.event_controller.create(event)
 
+    @attr('api')
     def test_bad_delete(self):
         with self.assertRaises(WebExError):
-            self.event_controller.delete(Event(session_key='garbage82uiu988h32983y34'))
+            self.event_controller.delete(event_id='garbage82uiu988h32983y34')
 
+    @attr('api')
     def test_good_delete(self):
         event = self.event_controller.create(helper.generate_event())
         self.assertTrue(event)

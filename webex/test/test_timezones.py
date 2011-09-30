@@ -1,6 +1,5 @@
 import unittest2
 import datetime
-import time
 import calendar
 from pprint import pprint
 import pytz

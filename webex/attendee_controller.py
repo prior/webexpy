@@ -1,22 +1,12 @@
-from lxml import etree
 import datetime
 import dateutil.parser
 import pytz
-import pprint
-
 from utils import ATTENDEE_NS,HISTORY_NS,COMMON_NS
 from base_controller import BaseController
 from attendee import Attendee
-from event import Event
 
 
-class AttendeeController(BaseController):
-    def __init__(self, account, event, debug=False):
-        super(AttendeeController, self).__init__(account,debug)
-        self.event = event
-
-    def create(self,attendee):
-        xml = """
+CREATE_XML = """
 <bodyContent xsi:type= "java:com.webex.service.binding.attendee.CreateMeetingAttendee">
   <person>
     <firstName>%s</firstName>
@@ -26,7 +16,32 @@ class AttendeeController(BaseController):
   <sessionKey>%s</sessionKey>
 </bodyContent>
 """
-        xml %= (attendee.first_name, attendee.last_name, attendee.email, attendee.event.session_key)
+
+DELETE_XML = """
+<bodyContent xsi:type= "java:com.webex.service.binding.attendee.DelMeetingAttendee">
+  <attendeeID>%s</attendeeID>
+</bodyContent>
+"""
+
+LIST_REGISTRANTS_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.attendee.LstMeetingAttendee">
+  <meetingKey>%s</meetingKey>
+</bodyContent>
+"""
+
+LIST_ATTENDEES_XML = """
+<bodyContent xsi:type= "java:com.webex.service.binding.history.LsteventattendeeHistory">
+  <sessionKey>%s</sessionKey>
+</bodyContent>
+"""
+
+class AttendeeController(BaseController):
+    def __init__(self, account, event, debug=False):
+        super(AttendeeController, self).__init__(account, debug=debug)
+        self.event = event
+
+    def create(self, attendee):
+        xml = CREATE_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}attendeeId"%ATTENDEE_NS)
@@ -35,25 +50,17 @@ class AttendeeController(BaseController):
                 return attendee
         return False
     
-    def delete(self, attendee):
-        xml = """
-<bodyContent xsi:type= "java:com.webex.service.binding.attendee.DelMeetingAttendee">
-  <attendeeID>%s</attendeeID>
-</bodyContent>
-"""
-        xml %= attendee.id
+    def delete(self, attendee=None, attendee_id=None):
+        if attendee_id and not attendee:
+            attendee = Attendee(id=attendee_id)
+        xml = DELETE_XML % attendee.id
         response = self.query(xml)
         if response.success:
             return attendee
         return False
 
-    def list_registrants(self, event):
-        xml = """
-<bodyContent xsi:type="java:com.webex.service.binding.attendee.LstMeetingAttendee">
-  <meetingKey>%s</meetingKey>
-</bodyContent>
-"""
-        xml %= event.session_key
+    def list_registrants(self):
+        xml = LIST_REGISTRANTS_XML % self.event.session_key
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:
@@ -65,13 +72,8 @@ class AttendeeController(BaseController):
                 attendees.append(Attendee(id=id, email=email, first_name=first_name, last_name=last_name))
         return attendees
 
-    def list_attendants(self, event):
-        xml = """
-<bodyContent xsi:type= "java:com.webex.service.binding.history.LsteventattendeeHistory">
-  <sessionKey>%s</sessionKey>
-</bodyContent>
-"""
-        xml %= event.session_key
+    def list_attendants(self):
+        xml = LIST_ATTENDEES_XML % self.event.session_key
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:

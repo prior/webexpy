@@ -15,12 +15,12 @@ def get_account():
     filename = 'test_credentials.json'
     try:
         raw_text = open(os.path.join(os.path.dirname(__file__), filename)).read()
-    except IOError, err:
+    except IOError:
         raise WebExError, """Unable to open '%s' for integration tests.\n
   These tests rely on the existence of that file and on it having valid webex credentials.""" % filename
     try:
         creds = json.loads(raw_text)
-    except ValueError, err:
+    except ValueError:
         raise WebExError, """'%s' doesn't appar to be valid json!\n
   These tests rely on the existence of that file and on it having valid webex credentials.""" % filename
     return Account(**creds)
@@ -37,4 +37,4 @@ def generate_event(minute_distance = 15):
 
 def generate_attendee(event=None):
     random = str(uuid4())
-    return Attendee('%s@%s.com'%(random[0:8],random[8:16]), 'John%s'%random[16:20], 'Smith%s'%random[20:24], event)
+    return Attendee(email='%s@%s.com'%(random[0:8],random[8:16]), first_name='John%s'%random[16:20], last_name='Smith%s'%random[20:24])

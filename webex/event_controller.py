@@ -1,9 +1,4 @@
-from lxml import etree
-import urllib2
-import datetime
 import dateutil.parser
-import pytz
-import pprint
 
 from event import Event
 from timezone import Timezone
@@ -11,12 +6,7 @@ from utils import EVENT_NS
 from base_controller import BaseController
 
 
-class EventController(BaseController):
-    def __init__(self, account, debug=False):
-        super(EventController, self).__init__(account,debug)
-
-    def create(self, event):
-        xml = """
+CREATE_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">
   <accessControl>
     <listing>PUBLIC</listing>
@@ -33,7 +23,32 @@ class EventController(BaseController):
   </metaData>
 </bodyContent>
 """
-        xml %= (
+
+DELETE_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent">
+  <sessionKey>%s</sessionKey>
+</bodyContent>
+"""
+
+LIST_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">
+  <listControl>
+    <startFrom>1</startFrom>
+    <maximumNum>1000</maximumNum>
+  </listControl>
+  <order>
+    <orderBy>STARTTIME</orderBy>
+    <orderAD>DESC</orderAD>
+  </order>
+</bodyContent>
+"""
+
+class EventController(BaseController):
+    def __init__(self, account, debug=False):
+        super(EventController, self).__init__(account, debug=debug)
+
+    def create(self, event):
+        xml = CREATE_XML % (
             event.start_datetime.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
             Timezone.from_localized_datetime(event.start_datetime).id,
@@ -47,32 +62,17 @@ class EventController(BaseController):
             return event
         return False
 
-    def delete(self, event):
-        xml = """
-<bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent">
-  <sessionKey>%s</sessionKey>
-</bodyContent>
-"""
-        xml %= event.session_key
+    def delete(self, event=None, event_id=None):
+        if event_id and not event:
+            event = Event(session_key=event_id)
+        xml = DELETE_XML % event.session_key
         response = self.query(xml)
         if response.success:
             return event
         return False
 
     def list(self):
-        xml = """
-<bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">
-  <listControl>
-    <startFrom>1</startFrom>
-    <maximumNum>1000</maximumNum>
-  </listControl>
-  <order>
-    <orderBy>STARTTIME</orderBy>
-    <orderAD>DESC</orderAD>
-  </order>
-</bodyContent>
-"""
-        response = self.query(xml)
+        response = self.query(LIST_XML)
         events = []
         if response.success:
             for elem in response.body_content.findall("{%s}event"%EVENT_NS):

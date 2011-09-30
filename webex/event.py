@@ -1,9 +1,3 @@
-from lxml import etree
-import urllib2
-import datetime
-import dateutil.parser
-import pytz
-import pprint
 
 
 class Event(object):

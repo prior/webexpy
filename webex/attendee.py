@@ -1,13 +1,10 @@
-import pprint
-
 from utils import is_blank
 
 class Attendee(object):
-    def __init__(self, email=None, first_name=None, last_name=None, event=None, start_datetime=None, end_datetime=None, duration=None, ip_address=None, id=None):
+    def __init__(self, email=None, first_name=None, last_name=None, start_datetime=None, end_datetime=None, duration=None, ip_address=None, id=None):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
-        self.event = event
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.duration = duration
@@ -21,8 +18,6 @@ class Attendee(object):
             self.first_name = attendee.first_name
         if is_blank(self.last_name) and not is_blank(attendee.last_name):
             self.last_name = attendee.last_name
-        if self.event is None and attendee.event is not None:
-            self.event = attendee.event
         if self.start_datetime is None and attendee.start_datetime is not None:
             self.start_datetime = attendee.start_datetime
         elif self.start_datetime is not None and attendee.start_datetime is not None and attendee.start_datetime < self.start_datetime:
