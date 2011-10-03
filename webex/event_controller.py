@@ -24,6 +24,25 @@ CREATE_XML = """
 </bodyContent>
 """
 
+UPDATE_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.event.SetEvent">
+  <accessControl>
+    <listing>PUBLIC</listing>
+    <sessionPassword>0000</sessionPassword>
+  </accessControl>
+  <event:sessionKey>%s</event:sessionKey>
+  <schedule>
+    <startDate>%s</startDate>
+    <duration>%s</duration>
+    <timeZoneID>%s</timeZoneID>
+  </schedule>
+  <metaData>
+    <sessionName>%s</sessionName>
+    <description>%s</description>
+  </metaData>
+</bodyContent>
+"""
+
 DELETE_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent">
   <sessionKey>%s</sessionKey>
@@ -59,6 +78,19 @@ class EventController(BaseController):
             elem = response.body_content.find("{%s}sessionKey"%EVENT_NS)
             if elem is not None:
                 event.session_key = elem.text
+            return event
+        return False
+
+    def update(self, event):
+        xml = UPDATE_XML % (
+            event.session_key,
+            event.start_datetime.strftime("%m/%d/%Y %H:%M:%S"),
+            event.duration,
+            Timezone.from_localized_datetime(event.start_datetime).id,
+            event.session_name,
+            event.description)
+        response = self.query(xml)
+        if response.success:
             return event
         return False
 

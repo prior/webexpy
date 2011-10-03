@@ -46,6 +46,20 @@ class EventControllerTest(unittest2.TestCase):
             self.event_controller.create(event)
 
     @attr('api')
+    def test_update(self):
+        event1 = helper.generate_event()
+        event2 = helper.generate_event()
+        self.event_controller.create(event1)
+        event = [ev for ev in self.event_controller.list() if ev.session_key == event1.session_key][0]
+        self.assertEquals(event.session_name, event1.session_name)
+        self.assertNotEquals(event.session_name, event2.session_name)
+        event.session_name = event2.session_name
+        self.event_controller.update(event)
+        event = [ev for ev in self.event_controller.list() if ev.session_key == event1.session_key][0]
+        self.assertEquals(event.session_name, event2.session_name)
+        self.assertNotEquals(event.session_name, event1.session_name)
+
+    @attr('api')
     def test_bad_delete(self):
         with self.assertRaises(WebExError):
             self.event_controller.delete(event_id='garbage82uiu988h32983y34')
