@@ -1,7 +1,6 @@
-
-
 class Event(object):
     def __init__(self, session_name=None, start_datetime=None, duration=60, description=None, session_key=None):
+        super(Event,self).__init__()
         self.session_name = session_name
         self.start_datetime = start_datetime
         self.duration = duration

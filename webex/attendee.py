@@ -2,6 +2,7 @@ from utils import is_blank
 
 class Attendee(object):
     def __init__(self, email=None, first_name=None, last_name=None, start_datetime=None, end_datetime=None, duration=None, ip_address=None, id=None):
+        super(Attendee,self).__init__()
         self.email = email
         self.first_name = first_name
         self.last_name = last_name

@@ -87,6 +87,7 @@ for timezone_id, webex_label, tz_label in TIMEZONE_DATA:
 
 class Timezone(object):
     def __init__(self, id=None, tzinfo=None):
+        super(Timezone,self).__init__()
         self.id = id
         self.tzinfo = tzinfo
         if self.id is None:

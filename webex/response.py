@@ -7,6 +7,7 @@ from utils import SERVICE_NS
 
 class Response(object):
     def __init__(self, request, xml_override=None, debug=False, empty_list_ok=False):
+        super(Response,self).__init__()
         self.request = request
         self.debug = debug
         self.empty_list_ok = empty_list_ok

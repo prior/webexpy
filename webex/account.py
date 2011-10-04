@@ -22,6 +22,7 @@ class Account(object):
         site_id or site_name are required, if both specified, then site_name is used
         if webex_id and email both specified, then email is used -- not sure what that means?
         """
+        super(Account,self).__init__()
         self.webex_id = webex_id
         self.password = password
         self.site_id = site_id
