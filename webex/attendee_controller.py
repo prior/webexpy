@@ -94,10 +94,10 @@ class AttendeeController(BaseController):
                 
         return attendees
 
-    def list(self, event):
-        if event.start_datetime.astimezone(pytz.utc).replace(tzinfo=None) > datetime.datetime.utcnow():
-            return self.list_enrolled_attendees(event)
-        lst = self.list_enrolled_attendees(event) + self.list_attended_attendees(event)
+    def list(self):
+        if self.event.start_datetime.astimezone(pytz.utc).replace(tzinfo=None) > datetime.datetime.utcnow():
+            return self.list_registrants()
+        lst = self.list_registrants() + self.list_attendants()
         h = {}
         for attendee in lst:
             if h.get(attendee.email) is None:
