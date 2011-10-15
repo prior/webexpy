@@ -1,12 +1,3 @@
-from lxml import etree
-import urllib2
-import datetime
-import time
-import calendar
-import dateutil.parser
-import pytz
-import pprint
-
 
 TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
     (0, 'GMT-12:00, Dateline (Eniwetok)', None), # has no standard pytz label available
@@ -73,41 +64,11 @@ TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
     (61, 'GMT+12:00, Fiji (Fiji)', 'Pacific/Fiji'),
 )
 
-# build id to tzinfo map
-TIMEZONE_ID_TO_TZINFO_MAP = {}
-for timezone_id, webex_label, tz_label in TIMEZONE_DATA:
-    if tz_label is not None:
-        TIMEZONE_ID_TO_TZINFO_MAP[timezone_id] = pytz.timezone(tz_label)
+PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP = {}
+WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP = {}
+for webex_timezone_id, webex_label, pytz_label in TIMEZONE_DATA:
+    if pytz_label is not None:
+        WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[webex_timezone_id] = pytz_label
+        PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[pytz_label] = webex_timezone_id
 
-# build tzinfo to id map
-TZINFO_TO_TIMEZONE_ID_MAP = {}
-for timezone_id, webex_label, tz_label in TIMEZONE_DATA:
-    if tz_label is not None:
-        TZINFO_TO_TIMEZONE_ID_MAP[pytz.timezone(tz_label)] = timezone_id
 
-class Timezone(object):
-    def __init__(self, id=None, tzinfo=None):
-        super(Timezone,self).__init__()
-        self.id = id
-        self.tzinfo = tzinfo
-        if self.id is None:
-            self.id = TZINFO_TO_TIMEZONE_ID_MAP[self.tzinfo]
-        if self.tzinfo is None:
-            self.tzinfo = TIMEZONE_ID_TO_TZINFO_MAP[self.id]
-
-    def localize_new_naive_datetime(self, year, month, day, hour=0, minute=0, second=0, microsecond=0):
-        return self.tzinfo.localize(datetime.datetime(year,month,day,hour,minute,second,microsecond))
-
-    def localized_datetime_from_utc_timestamp(self, utc_seconds):
-        return datetime.datetime.utcfromtimestamp(utc_seconds).replace(tzinfo=pytz.utc).astimezone(self.tzinfo)
-
-    def utc_timestamp_from_localized_datetime(self, dt):
-        return calendar.timegm(pytz.utc.normalize(dt.astimezone(pytz.utc)).timetuple())
-
-    def localize_naive_datetime(self, naive_datetime):
-        return self.tzinfo.localize(naive_datetime)
-
-    @classmethod
-    def from_localized_datetime(cls, localized_datetime):
-        return Timezone(tzinfo=pytz.timezone(localized_datetime.tzinfo.zone))
-  

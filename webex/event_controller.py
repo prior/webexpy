@@ -1,10 +1,8 @@
-import dateutil.parser
-
 from event import Event
-from timezone import Timezone
+import timezone
 from utils import EVENT_NS
 from base_controller import BaseController
-
+from sanetime.sanetime import SaneTime
 
 CREATE_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">
@@ -68,11 +66,11 @@ class EventController(BaseController):
 
     def create(self, event):
         xml = CREATE_XML % (
-            event.start_datetime.strftime("%m/%d/%Y %H:%M:%S"),
+            event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
-            Timezone.from_localized_datetime(event.start_datetime).id,
-            event.session_name,
-            event.description)
+            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz],
+            event.title,
+            event.description )
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}sessionKey"%EVENT_NS)
@@ -84,11 +82,11 @@ class EventController(BaseController):
     def update(self, event):
         xml = UPDATE_XML % (
             event.session_key,
-            event.start_datetime.strftime("%m/%d/%Y %H:%M:%S"),
+            event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
-            Timezone.from_localized_datetime(event.start_datetime).id,
-            event.session_name,
-            event.description)
+            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz],
+            event.title,
+            event.description )
         response = self.query(xml)
         if response.success:
             return event
@@ -108,16 +106,15 @@ class EventController(BaseController):
         events = []
         if response.success:
             for elem in response.body_content.findall("{%s}event"%EVENT_NS):
-                session_name = elem.find("{%s}sessionName"%EVENT_NS).text
-                start_datetime = dateutil.parser.parse(elem.find("{%s}startDate"%EVENT_NS).text)
+                title = elem.find("{%s}sessionName"%EVENT_NS).text
+                starts_at = elem.find("{%s}startDate"%EVENT_NS).text
                 timezone_id = int(elem.find("{%s}timeZoneID"%EVENT_NS).text)
                 duration = int(elem.find("{%s}duration"%EVENT_NS).text)
                 description = elem.find("{%s}description"%EVENT_NS).text
                 session_key = elem.find("{%s}sessionKey"%EVENT_NS).text
-                event = Event(session_name, Timezone(timezone_id).localize_naive_datetime(start_datetime), duration, description, session_key)
+                starts_at = SaneTime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
+                event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
             return events
         return False
-
-
 

@@ -1,6 +1,5 @@
 import re
 from error import WebExError
-from utils import is_blank
 
 
 REQUEST_XML_PRE_TEMPLATE = """
@@ -34,21 +33,21 @@ class Account(object):
     def rebuild_request_xml_template(self):
         if self.site_name and not re.compile(r'^[-a-zA-Z0-9_]*$').match(self.site_name):
             raise WebExError, "site_name is invalid!  It is expected to be an alphanumeric string."
-        if is_blank(self.webex_id):
+        if not self.webex_id:
             raise WebExError, "Expected a webexId for API request validations, but did not receive one!"
-        if is_blank(self.password):
+        if not self.password:
             raise WebExError, "Expected a password for API request validations, but did not receive one!"
-        if is_blank(self.site_id) and is_blank(self.site_name):
+        if not self.site_id and not self.site_name:
             raise WebExError, "Expected a siteId or a siteName for API request validations, but did not receive one!"
         securitySection = "\n<webExID>%s</webExID>" % self.webex_id
         securitySection += "\n<password>%s</password>" % self.password
-        if is_blank(self.site_name):
-            securitySection += "\n<siteId>%s</siteId>" % self.site_id
-        else:
+        if self.site_name:
             securitySection += "\n<siteName>%s</siteName>" % self.site_name
-        if not is_blank(self.partner_id):
+        else:
+            securitySection += "\n<siteId>%s</siteId>" % self.site_id
+        if self.partner_id:
             securitySection += "\n<partnerID>%s</partnerID>" % self.partner_id
-        if not is_blank(self.email):
+        if self.email:
             securitySection += "\n<email>%s</email>" % self.email
         self.request_xml_template = REQUEST_XML_PRE_TEMPLATE.strip() % (securitySection, '%s')
         return self.request_xml_template

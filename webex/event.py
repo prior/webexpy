@@ -1,8 +1,8 @@
 class Event(object):
-    def __init__(self, session_name=None, start_datetime=None, duration=60, description=None, session_key=None):
+    def __init__(self, title=None, starts_at=None, duration=60, description=None, session_key=None):
         super(Event,self).__init__()
-        self.session_name = session_name
-        self.start_datetime = start_datetime
+        self.title = title
+        self.starts_at = starts_at
         self.duration = duration
         self.description = description
         self.session_key = session_key
@@ -11,5 +11,5 @@ class Event(object):
         return self.__unicode__() 
 
     def __unicode__(self):
-        return "WebEx Event: %s %s at %s for %s minutes [%s]" % (self.session_name, self.description, self.start_datetime, self.duration, self.session_key)
+        return "WebEx Event: %s %s at %s for %s minutes [%s]" % (self.title, self.description, self.starts_at, self.duration, self.session_key)
 

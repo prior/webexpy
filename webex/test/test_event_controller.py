@@ -5,7 +5,7 @@ import os
 from webex.error import WebExError
 from webex.event import Event
 from webex.event_controller import EventController
-from webex.timezone import Timezone
+from sanetime.sanetime import SaneTime
 
 import helper
 
@@ -51,13 +51,13 @@ class EventControllerTest(unittest2.TestCase):
         event2 = helper.generate_event()
         self.event_controller.create(event1)
         event = [ev for ev in self.event_controller.list() if ev.session_key == event1.session_key][0]
-        self.assertEquals(event.session_name, event1.session_name)
-        self.assertNotEquals(event.session_name, event2.session_name)
-        event.session_name = event2.session_name
+        self.assertEquals(event.title, event1.title)
+        self.assertNotEquals(event.title, event2.title)
+        event.title = event2.title
         self.event_controller.update(event)
         event = [ev for ev in self.event_controller.list() if ev.session_key == event1.session_key][0]
-        self.assertEquals(event.session_name, event2.session_name)
-        self.assertNotEquals(event.session_name, event1.session_name)
+        self.assertEquals(event.title, event2.title)
+        self.assertNotEquals(event.title, event1.title)
 
     @attr('api')
     def test_bad_delete(self):
@@ -76,15 +76,16 @@ class EventControllerTest(unittest2.TestCase):
         self.assertEqual(3, len(event_list))
         event = event_list[0]
         self.assertIsNotNone(event)
-        self.assertEquals("ec 0000000000", event.session_name)
-        self.assertEquals(Timezone(45).localize_new_naive_datetime(2004,4,3,10), event.start_datetime)
+        self.assertEquals("ec 0000000000", event.title)
+        self.assertEquals(SaneTime(2004,4,3,10,tz='Asia/Shanghai').utc_micros, event.starts_at.utc_micros)
+        self.assertEquals(SaneTime(2004,4,3,10,tz='Asia/Shanghai').tz, event.starts_at.tz)
         self.assertEquals(60, event.duration)
         self.assertEquals('xbxbxcxcbbsbsd', event.description)
         self.assertEquals('23357393', event.session_key)
 
     def test_create_response_parsing(self):
         self.event_controller.xml_override = open(os.path.join(os.path.dirname(__file__),'example_CreateEventResponse.xml')).read()
-        event = Event("ec 000000000", Timezone(45).localize_new_naive_datetime(2004,4,3,10), 60, 'xbxbxbxbxxxbx')
+        event = Event("ec 000000000", SaneTime(2004,4,3,10,tz='Asia/Shanghai'), 60, 'xbxbxbxbxxxbx')
         self.assertIsNone(event.session_key)
         self.event_controller.create(event)
         self.assertIsNotNone(event.session_key)

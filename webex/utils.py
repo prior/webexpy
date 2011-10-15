@@ -6,6 +6,3 @@ EVENT_NS = '%s/event' % SERVICE_NS
 ATTENDEE_NS = '%s/attendee' % SERVICE_NS
 HISTORY_NS = '%s/history' % SERVICE_NS
 
-def is_blank(s):
-    return s is None or not s.strip()
-

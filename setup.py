@@ -3,17 +3,17 @@ from distutils.core import setup
 
 setup(
     name='pywebex',
-    version='1.0',
+    version='1.0.0',
     description='Python WebEx Api Wrapper',
     author='Michael Prior',
     author_email='prior@cracklabs.com',
     url='',
     packages=['webex'],
     install_requires=[
-        'lxml==2.3',
-        'nose==1.1.2',
-        'pytz==2011h',
-        'unittest2==0.5.1',
-        'python-dateutil==1.5',
-    ]
+        'lxml',
+        'nose',
+        'unittest2',
+        'sanetime==1.0.0'],
+    dependency_links = [
+        'http://github.com/prior/sanetime/tarball/v1.0.0#egg=sanetime-1.0.0']
 )
