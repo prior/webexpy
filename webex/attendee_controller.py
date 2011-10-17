@@ -15,9 +15,18 @@ CREATE_XML = """
 </bodyContent>
 """
 
-DELETE_XML = """
+DELETE_BY_ID_XML = """
 <bodyContent xsi:type= "java:com.webex.service.binding.attendee.DelMeetingAttendee">
   <attendeeID>%s</attendeeID>
+</bodyContent>
+"""
+
+DELETE_BY_EMAIL_XML = """
+<bodyContent xsi:type= "java:com.webex.service.binding.attendee.DelMeetingAttendee">
+  <attendeeEmail>
+    <email>%s</email>
+    <sessionKey>%s</sessionKey>
+  </attendeeEmail>
 </bodyContent>
 """
 
@@ -51,7 +60,10 @@ class AttendeeController(BaseController):
     def delete(self, attendee=None, attendee_id=None):
         if attendee_id and not attendee:
             attendee = Attendee(id=attendee_id)
-        xml = DELETE_XML % attendee.id
+        if attendee.email and self.event.session_key:
+            xml = DELETE_BY_EMAIL_XML % (attendee.email, self.event.session_key)
+        elif attendee.id:
+            xml = DELETE_BY_ID_XML % attendee.id
         response = self.query(xml)
         if response.success:
             return attendee

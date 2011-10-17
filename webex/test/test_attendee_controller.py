@@ -2,7 +2,6 @@ import unittest2
 from nose.plugins.attrib import attr
 
 from webex.error import WebExError
-from webex.attendee import Attendee
 from webex.event_controller import EventController
 from webex.attendee_controller import AttendeeController
 
@@ -54,11 +53,23 @@ class AttendeeControllerTest(unittest2.TestCase):
             self.attendee_controller.delete(attendee_id=2983492342)
 
     @attr('api')
-    def test_good_delete(self):
+    def test_good_delete_by_id(self):
         attendee = helper.generate_attendee()
-        self.attendee_controller.create(attendee)
+        attendee = self.attendee_controller.create(attendee)
         self.assertTrue(attendee)
-        self.assertEquals(attendee,self.attendee_controller.delete(attendee))
+        self.assertIn(attendee.id, [a.id for a in self.attendee_controller.list()])
+        self.assertTrue(self.attendee_controller.delete(attendee))
+        self.assertNotIn(attendee.id, [a.id for a in self.attendee_controller.list()])
+
+    @attr('api')
+    def test_good_delete_by_email(self):
+        attendee = helper.generate_attendee()
+        attendee = self.attendee_controller.create(attendee)
+        self.assertTrue(attendee)
+        attendee.id = None
+        self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list()])
+        self.assertTrue(self.attendee_controller.delete(attendee))
+        self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list()])
 
 if __name__ == '__main__':
     unittest2.main()
