@@ -2,6 +2,8 @@ from utils import ATTENDEE_NS,HISTORY_NS,COMMON_NS
 from base_controller import BaseController
 from attendee import Attendee
 from sanetime.sanetime import SaneTime
+import logger
+from pprint import pformat
 
 
 CREATE_XML = """
@@ -46,9 +48,16 @@ class AttendeeController(BaseController):
     def __init__(self, account, event, debug=False):
         super(AttendeeController, self).__init__(account, debug=debug)
         self.event = event
+        self.log = logger.get_log(subname='attendee')
+
+    def debug(self, action, attendee=None):
+        s = '%s (title=%s  session_key=%s)' % (action, self.event.title, self.event.session_key)
+        s += attendee and '\n====attendee\n%s\n' % pformat(vars(attendee)) or ''
+        self.log.debug(s)
 
     def create(self, attendee):
         xml = CREATE_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
+        self.debug("creating attendee...", attendee)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}attendeeId"%ATTENDEE_NS)
@@ -64,6 +73,7 @@ class AttendeeController(BaseController):
             xml = DELETE_BY_EMAIL_XML % (attendee.email, self.event.session_key)
         elif attendee.id:
             xml = DELETE_BY_ID_XML % attendee.id
+        self.debug("deleting attendee...", attendee)
         response = self.query(xml)
         if response.success:
             return attendee
@@ -71,6 +81,7 @@ class AttendeeController(BaseController):
 
     def list_registrants(self):
         xml = LIST_REGISTRANTS_XML % self.event.session_key
+        self.debug("listing registrants...")
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:
@@ -84,6 +95,7 @@ class AttendeeController(BaseController):
 
     def list_attendants(self):
         xml = LIST_ATTENDEES_XML % self.event.session_key
+        self.debug("listing attendants...")
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:

@@ -4,9 +4,8 @@ from utils import EP_NS
 
 class BaseController(object):
 
-    def __init__(self, account, debug=False):
+    def __init__(self, account):
         super(BaseController,self).__init__()
-        self.debug = debug
         self.account = account
 
     def get_api_version(self):
@@ -17,6 +16,6 @@ class BaseController(object):
         return "%s : %s" % (version, release)
 
     def query(self, body_content, empty_list_ok=False):
-        return Response(Request(self.account, body_content), debug=self.debug, xml_override=getattr(self,'xml_override',None), empty_list_ok=empty_list_ok)
+        return Response(Request(self.account, body_content), xml_override=getattr(self,'xml_override',None), empty_list_ok=empty_list_ok)
 
 

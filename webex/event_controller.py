@@ -3,6 +3,8 @@ import timezone
 from utils import EVENT_NS
 from base_controller import BaseController
 from sanetime.sanetime import SaneTime
+import logger
+from pprint import pformat
 
 CREATE_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">
@@ -62,8 +64,15 @@ LIST_XML = """
 
 class EventController(BaseController):
     def __init__(self, account, debug=False):
-        super(EventController, self).__init__(account, debug=debug)
+        super(EventController, self).__init__(account)
+        self.log = logger.get_log(subname='event')
 
+    def debug(self, action, event=None):
+        s = action
+        s = '%s (webex_id=%s)' % (action, self.account.webex_id)
+        s += event and '\n====event\n%s\n' % pformat(vars(event)) or ''
+        self.log.debug(s)
+        
     def create(self, event):
         xml = CREATE_XML % (
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
@@ -71,6 +80,7 @@ class EventController(BaseController):
             timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz],
             event.title,
             event.description )
+        self.debug("creating event...", event)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}sessionKey"%EVENT_NS)
@@ -87,6 +97,7 @@ class EventController(BaseController):
             timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz],
             event.title,
             event.description )
+        self.debug("updating event...", event)
         response = self.query(xml)
         if response.success:
             return event
@@ -96,12 +107,14 @@ class EventController(BaseController):
         if event_id and not event:
             event = Event(session_key=event_id)
         xml = DELETE_XML % event.session_key
+        self.debug("deleting event...", event)
         response = self.query(xml)
         if response.success:
             return event
         return False
 
     def list(self):
+        self.debug("listing events...")
         response = self.query(LIST_XML)
         events = []
         if response.success:

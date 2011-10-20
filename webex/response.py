@@ -1,23 +1,22 @@
 from lxml import etree
 import urllib2
 from error import WebExError
-
 from utils import SERVICE_NS
+import logger
 
 
 class Response(object):
-    def __init__(self, request, xml_override=None, debug=False, empty_list_ok=False):
+    def __init__(self, request, xml_override=None, empty_list_ok=False):
         super(Response,self).__init__()
+        self.log = logger.get_log(subname='response')
         self.request = request
-        self.debug = debug
         self.empty_list_ok = empty_list_ok
         self.raw_response = self.exception = None
         self.success = False
         if xml_override is not None:
             self.raw_response = xml_override
         else:
-            if self.debug:
-                print("\n=========== REQUEST \n%s\n\n" % self.request.msg)
+            self.log.debug("REQUEST: \n%s\n\n" % self.request.msg)
             try:
                 self.raw_response = urllib2.urlopen(self.request.raw_request).read()
             except urllib2.URLError, err:
@@ -26,8 +25,7 @@ class Response(object):
 
     def parse(self):
         if self.raw_response is not None:
-            if self.debug:
-                print("\n=========== RESPONSE \n%s\n\n" % etree.tostring(etree.fromstring(self.raw_response), pretty_print=True))
+            self.log.debug("RESPONSE: \n%s\n\n" % etree.tostring(etree.fromstring(self.raw_response), pretty_print=True))
             xml = self.raw_response
             self.body_content = None
             if self.parse_response(etree.fromstring(xml).find("{%s}header"%SERVICE_NS).find("{%s}response"%SERVICE_NS)):
