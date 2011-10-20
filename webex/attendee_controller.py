@@ -14,6 +14,21 @@ CREATE_XML = """
     <email>%s</email>
   </person>
   <sessionKey>%s</sessionKey>
+  <joinStatus>INVITE</joinStatus>
+</bodyContent>
+"""
+
+REGISTER_XML = """
+<bodyContent xsi:type= "java:com.webex.service.binding.attendee.RegisterMeetingAttendee">
+  <attendees>
+    <person>
+        <firstName>%s</firstName>
+        <lastName>%s</lastName>
+        <email>%s</email>
+    </person>
+    <sessionKey>%s</sessionKey>
+    <joinStatus>REGISTER</joinStatus>
+  </attendees>
 </bodyContent>
 """
 
@@ -45,8 +60,8 @@ LIST_ATTENDEES_XML = """
 """
 
 class AttendeeController(BaseController):
-    def __init__(self, account, event, debug=False):
-        super(AttendeeController, self).__init__(account, debug=debug)
+    def __init__(self, account, event):
+        super(AttendeeController, self).__init__(account)
         self.event = event
         self.log = logger.get_log(subname='attendee')
 
@@ -65,7 +80,15 @@ class AttendeeController(BaseController):
                 attendee.id = elem.text
                 return attendee
         return False
-    
+
+    def register(self, attendee):
+        xml = REGISTER_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
+        self.debug("registering attendee...", attendee)
+        response = self.query(xml)
+        if response.success:
+            return attendee
+        return False
+
     def delete(self, attendee=None, attendee_id=None):
         if attendee_id and not attendee:
             attendee = Attendee(id=attendee_id)
