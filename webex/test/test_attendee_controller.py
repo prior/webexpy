@@ -15,7 +15,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         self.account = helper.get_account()
         self.event_controller = EventController(self.account)
         self.event = self.event_controller.create(helper.generate_event())
-        self.attendee_controller = AttendeeController(self.account, self.event, debug=False)
+        self.attendee_controller = AttendeeController(self.account, self.event)
 
     def tearDown(self):
         self.event_controller.delete(self.event)
@@ -25,6 +25,13 @@ class AttendeeControllerTest(unittest2.TestCase):
         attendee = helper.generate_attendee()
         self.assertIsNone(attendee.id)
         self.assertTrue(self.attendee_controller.create(attendee))
+        self.assertIsNotNone(attendee.id)
+
+    @attr('api')
+    def test_register(self):
+        attendee = helper.generate_attendee()
+        self.assertIsNone(attendee.id)
+        self.assertTrue(self.attendee_controller.register(attendee))
         self.assertIsNotNone(attendee.id)
 
     @attr('api')

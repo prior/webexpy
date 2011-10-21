@@ -86,7 +86,10 @@ class AttendeeController(BaseController):
         self.debug("registering attendee...", attendee)
         response = self.query(xml)
         if response.success:
-            return attendee
+            elem = response.body_content.find('{%s}register'%ATTENDEE_NS).find('{%s}attendeeID'%ATTENDEE_NS)
+            if elem is not None:
+                attendee.id = elem.text
+                return attendee
         return False
 
     def delete(self, attendee=None, attendee_id=None):

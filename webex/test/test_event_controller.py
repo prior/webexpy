@@ -15,7 +15,7 @@ class EventControllerTest(unittest2.TestCase):
     # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
     def setUp(self):
         self.account = helper.get_account()
-        self.event_controller = EventController(self.account, debug=False)
+        self.event_controller = EventController(self.account)
 
     @attr('api')
     def test_list(self):
