@@ -5,7 +5,7 @@ import os
 from webex.error import WebExError
 from webex.event import Event
 from webex.event_controller import EventController
-from sanetime.sanetime import SaneTime
+from sanetime import sanetime
 
 import helper
 
@@ -77,15 +77,15 @@ class EventControllerTest(unittest2.TestCase):
         event = event_list[0]
         self.assertIsNotNone(event)
         self.assertEquals("ec 0000000000", event.title)
-        self.assertEquals(SaneTime(2004,4,3,10,tz='Asia/Shanghai').utc_micros, event.starts_at.utc_micros)
-        self.assertEquals(SaneTime(2004,4,3,10,tz='Asia/Shanghai').tz, event.starts_at.tz)
+        self.assertEquals(sanetime(2004,4,3,10,tz='Asia/Shanghai').us, event.starts_at.us)
+        self.assertEquals(sanetime(2004,4,3,10,tz='Asia/Shanghai').tz, event.starts_at.tz)
         self.assertEquals(60, event.duration)
         self.assertEquals('xbxbxcxcbbsbsd', event.description)
         self.assertEquals('23357393', event.session_key)
 
     def test_create_response_parsing(self):
         self.event_controller.xml_override = open(os.path.join(os.path.dirname(__file__),'example_CreateEventResponse.xml')).read()
-        event = Event("ec 000000000", SaneTime(2004,4,3,10,tz='Asia/Shanghai'), 60, 'xbxbxbxbxxxbx')
+        event = Event("ec 000000000", sanetime(2004,4,3,10,tz='Asia/Shanghai'), 60, 'xbxbxbxbxxxbx')
         self.assertIsNone(event.session_key)
         self.event_controller.create(event)
         self.assertIsNotNone(event.session_key)

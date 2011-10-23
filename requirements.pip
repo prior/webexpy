@@ -2,5 +2,5 @@
 lxml
 nose
 unittest2
--e git://github.com/prior/sanetime.git@v1.0.0#egg=sanetime-1.0.0
+-e git://github.com/prior/sanetime.git@v2.0.1#egg=sanetime-2.0.1
 #-e ../sanetime

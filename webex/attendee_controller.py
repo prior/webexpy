@@ -1,7 +1,7 @@
 from utils import ATTENDEE_NS,HISTORY_NS,COMMON_NS
 from base_controller import BaseController
 from attendee import Attendee
-from sanetime.sanetime import SaneTime
+from sanetime import sanetime
 import logger
 from pprint import pformat
 
@@ -128,8 +128,8 @@ class AttendeeController(BaseController):
             attendees_hash = {}
             for elem in response.body_content.findall('{%s}eventAttendeeHistory'%HISTORY_NS):
                 email = elem.find('{%s}attendeeEmail'%HISTORY_NS).text
-                started_at = SaneTime(elem.find('{%s}startTime'%HISTORY_NS).text, tz=self.event.starts_at.tz)
-                stopped_at = SaneTime(elem.find('{%s}endTime'%HISTORY_NS).text, tz=self.event.starts_at.tz)
+                started_at = sanetime(elem.find('{%s}startTime'%HISTORY_NS).text, tz=self.event.starts_at.tz)
+                stopped_at = sanetime(elem.find('{%s}endTime'%HISTORY_NS).text, tz=self.event.starts_at.tz)
                 duration = int(elem.find('{%s}duration'%HISTORY_NS).text)
                 ip_address = elem.find('{%s}ipAddress'%HISTORY_NS).text
                 attendees_hash.setdefault(email,[]).append(Attendee(email=email,started_at=started_at,stopped_at=stopped_at,duration=duration,ip_address=ip_address))
@@ -143,7 +143,7 @@ class AttendeeController(BaseController):
         return attendees
 
     def list(self):
-        if self.event.starts_at > SaneTime():
+        if self.event.starts_at > sanetime():
             return self.list_registrants()
         lst = self.list_registrants() + self.list_attendants()
         h = {}

@@ -2,7 +2,7 @@ from event import Event
 import timezone
 from utils import EVENT_NS
 from base_controller import BaseController
-from sanetime.sanetime import SaneTime
+from sanetime import sanetime
 import logger
 from pprint import pformat
 
@@ -77,7 +77,7 @@ class EventController(BaseController):
         xml = CREATE_XML % (
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
-            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz],
+            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
             event.title,
             event.description )
         self.debug("creating event...", event)
@@ -94,7 +94,7 @@ class EventController(BaseController):
             event.session_key,
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
-            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz],
+            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
             event.title,
             event.description )
         self.debug("updating event...", event)
@@ -125,7 +125,7 @@ class EventController(BaseController):
                 duration = int(elem.find("{%s}duration"%EVENT_NS).text)
                 description = elem.find("{%s}description"%EVENT_NS).text
                 session_key = elem.find("{%s}sessionKey"%EVENT_NS).text
-                starts_at = SaneTime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
+                starts_at = sanetime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
                 event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
             return events
