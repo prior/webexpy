@@ -2,7 +2,7 @@ from event import Event
 import timezone
 from utils import EVENT_NS
 from base_controller import BaseController
-from sanetime import sanetime
+from sanetime import sanetztime
 import logger
 from pprint import pformat
 
@@ -125,7 +125,7 @@ class EventController(BaseController):
                 duration = int(elem.find("{%s}duration"%EVENT_NS).text)
                 description = elem.find("{%s}description"%EVENT_NS).text
                 session_key = elem.find("{%s}sessionKey"%EVENT_NS).text
-                starts_at = sanetime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
+                starts_at = sanetztime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
                 event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
             return events

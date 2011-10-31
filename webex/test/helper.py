@@ -2,7 +2,7 @@ import os
 import json
 from uuid import uuid4
 
-from sanetime import sanetime
+from sanetime import sanetztime
 
 from webex.error import WebExError
 from webex.account import Account
@@ -28,7 +28,8 @@ def get_account():
 UNITTEST_EVENT_DESCRIPTION = """This is a fake/dummy webinar event created by the unittest system to verify the WebEx systems are operational.  These events are normally deleted immediately after creation, but in the case that you are reading this, then some code failed along the way.  It's likely a temporary outage on the WebEx side.  Please feel free to delete this event manually and let us know if these keep cropping up."""
 
 def generate_event(minute_distance = 15):
-    starts_at = sanetime(tz='America/New_York')+minute_distance*60*1000**2
+    starts_at = sanetztime(tz='America/New_York')
+    starts_at = sanetztime(tz='America/New_York')+minute_distance*60*1000**2
     title = "Dummy UnitTest Event [%s]" % str(uuid4())[0:16]
     return Event(title, starts_at, 90, UNITTEST_EVENT_DESCRIPTION)
 
