@@ -2,13 +2,13 @@ from lxml import etree
 import urllib2
 from error import WebExError
 from utils import SERVICE_NS
-import logger
+import logging_glue
 
 
 class Response(object):
     def __init__(self, request, xml_override=None, empty_list_ok=False):
         super(Response,self).__init__()
-        self.log = logger.get_log(subname='response')
+        self.log = logging_glue.get_log('webex.response')
         self.request = request
         self.empty_list_ok = empty_list_ok
         self.raw_response = self.exception = None

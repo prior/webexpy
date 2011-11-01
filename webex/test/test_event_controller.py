@@ -8,12 +8,14 @@ from webex.event_controller import EventController
 from sanetime import sanetztime
 
 import helper
+import logger
 
 
 class EventControllerTest(unittest2.TestCase):
 
     # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
     def setUp(self):
+        print "\r"
         self.account = helper.get_account()
         self.event_controller = EventController(self.account)
 

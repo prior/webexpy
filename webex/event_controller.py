@@ -1,9 +1,10 @@
-from event import Event
+import logging_glue
+import sys
+from sanetime import sanetztime
 import timezone
+from event import Event
 from utils import EVENT_NS
 from base_controller import BaseController
-from sanetime import sanetztime
-import logger
 from pprint import pformat
 
 CREATE_XML = """
@@ -63,15 +64,25 @@ LIST_XML = """
 """
 
 class EventController(BaseController):
-    def __init__(self, account, debug=False):
+    def __init__(self, account):
         super(EventController, self).__init__(account)
-        self.log = logger.get_log(subname='event')
+        self.log = logging_glue.get_log('webex.event_controller')
 
     def debug(self, action, event=None):
         s = action
         s = '%s (webex_id=%s)' % (action, self.account.webex_id)
         s += event and '\n====event\n%s\n' % pformat(vars(event)) or ''
         self.log.debug(s)
+
+    def _log(self, action, event=None):
+        title = event and event.title or '?'
+        self.log.info('%s... (event=%s account=%s)' % (action, title, self.account.webex_id))
+        if event is not None:
+            self.log.debug('%s...   event=%s   account=%s' % (
+                action,
+                pformat(vars(event), width=sys.maxint) or '',
+                pformat(vars(self.account), width=sys.maxint) 
+            ))
         
     def create(self, event):
         xml = CREATE_XML % (
@@ -80,7 +91,7 @@ class EventController(BaseController):
             timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
             event.title,
             event.description )
-        self.debug("creating event...", event)
+        self._log("creating event", event)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}sessionKey"%EVENT_NS)
@@ -97,7 +108,7 @@ class EventController(BaseController):
             timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
             event.title,
             event.description )
-        self.debug("updating event...", event)
+        self._log("updating event", event)
         response = self.query(xml)
         if response.success:
             return event
@@ -107,14 +118,14 @@ class EventController(BaseController):
         if event_id and not event:
             event = Event(session_key=event_id)
         xml = DELETE_XML % event.session_key
-        self.debug("deleting event...", event)
+        self._log("deleting event", event)
         response = self.query(xml)
         if response.success:
             return event
         return False
 
     def list(self):
-        self.debug("listing events...")
+        self._log("listing events")
         response = self.query(LIST_XML)
         events = []
         if response.success:
@@ -129,5 +140,6 @@ class EventController(BaseController):
                 event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
             return events
+            self._log("listed %s events" % len(events))
         return False
 

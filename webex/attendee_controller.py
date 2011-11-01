@@ -1,9 +1,10 @@
+import sys
+import logging_glue
+from sanetime import sanetime
+from pprint import pformat
 from utils import ATTENDEE_NS,HISTORY_NS,COMMON_NS
 from base_controller import BaseController
 from attendee import Attendee
-from sanetime import sanetime
-import logger
-from pprint import pformat
 
 
 CREATE_XML = """
@@ -63,16 +64,21 @@ class AttendeeController(BaseController):
     def __init__(self, account, event):
         super(AttendeeController, self).__init__(account)
         self.event = event
-        self.log = logger.get_log(subname='attendee')
+        self.log = logging_glue.get_log('webex.attendee_controller')
 
-    def debug(self, action, attendee=None):
-        s = '%s (title=%s  session_key=%s)' % (action, self.event.title, self.event.session_key)
-        s += attendee and '\n====attendee\n%s\n' % pformat(vars(attendee)) or ''
-        self.log.debug(s)
+    def _log(self, action, attendee=None):
+        email = attendee and attendee.email or '?'
+        self.log.info('%s... (email=%s event=%s)' % (action, email, self.event.title))
+        if attendee is not None:
+            self.log.debug('%s...   attendee=%s   event=%s' % (
+                action,
+                pformat(vars(attendee), width=sys.maxint) or '',
+                pformat(vars(self.event), width=sys.maxint) 
+            ))
 
     def create(self, attendee):
         xml = CREATE_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
-        self.debug("creating attendee...", attendee)
+        self._log("creating attendee", attendee)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}attendeeId"%ATTENDEE_NS)
@@ -83,7 +89,7 @@ class AttendeeController(BaseController):
 
     def register(self, attendee):
         xml = REGISTER_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
-        self.debug("registering attendee...", attendee)
+        self._log("registering attendee", attendee)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find('{%s}register'%ATTENDEE_NS).find('{%s}attendeeID'%ATTENDEE_NS)
@@ -99,7 +105,7 @@ class AttendeeController(BaseController):
             xml = DELETE_BY_EMAIL_XML % (attendee.email, self.event.session_key)
         elif attendee.id:
             xml = DELETE_BY_ID_XML % attendee.id
-        self.debug("deleting attendee...", attendee)
+        self._log("deleting attendee", attendee)
         response = self.query(xml)
         if response.success:
             return attendee
@@ -107,7 +113,7 @@ class AttendeeController(BaseController):
 
     def list_registrants(self):
         xml = LIST_REGISTRANTS_XML % self.event.session_key
-        self.debug("listing registrants...")
+        self._log("listing registrants")
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:
@@ -117,11 +123,12 @@ class AttendeeController(BaseController):
                 last_name = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}lastName'%COMMON_NS).text
                 id = elem.find('{%s}attendeeId'%ATTENDEE_NS).text.strip()
                 attendees.append(Attendee(id=id, email=email, first_name=first_name, last_name=last_name))
+            self._log("listed %s registrants" % len(attendees))
         return attendees
 
     def list_attendants(self):
         xml = LIST_ATTENDEES_XML % self.event.session_key
-        self.debug("listing attendants...")
+        self._log("listing attendants")
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:
@@ -139,6 +146,7 @@ class AttendeeController(BaseController):
                 for i in range(len(value)-1):
                     attendee.merge(value[i+1])
                 attendees.append(attendee)
+            self._log("listed %s attendants" % len(attendees))
                 
         return attendees
 

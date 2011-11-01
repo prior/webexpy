@@ -4,11 +4,13 @@ from webex.error import WebExError
 from webex.base_controller import BaseController
 from webex.event_controller import EventController
 import helper
+import logger
 
 # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
 class BaseControllerTest(unittest2.TestCase):
 
     def setUp(self):
+        print "\n"
         self.account = helper.get_account()
 
     @attr('api')

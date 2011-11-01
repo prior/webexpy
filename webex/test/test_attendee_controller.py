@@ -6,12 +6,14 @@ from webex.event_controller import EventController
 from webex.attendee_controller import AttendeeController
 
 import helper
+import logger
 
 
 class AttendeeControllerTest(unittest2.TestCase):
 
     # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
     def setUp(self):
+        print "\r"
         self.account = helper.get_account()
         self.event_controller = EventController(self.account)
         self.event = self.event_controller.create(helper.generate_event())
