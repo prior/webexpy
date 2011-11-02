@@ -135,8 +135,8 @@ class AttendeeController(BaseController):
             attendees_hash = {}
             for elem in response.body_content.findall('{%s}eventAttendeeHistory'%HISTORY_NS):
                 email = elem.find('{%s}attendeeEmail'%HISTORY_NS).text
-                started_at = sanetime(elem.find('{%s}startTime'%HISTORY_NS).text, tz=self.event.starts_at.tz)
-                stopped_at = sanetime(elem.find('{%s}endTime'%HISTORY_NS).text, tz=self.event.starts_at.tz)
+                started_at = sanetime(elem.find('{%s}startTime'%HISTORY_NS).text) # looks to be UTC
+                stopped_at = sanetime(elem.find('{%s}endTime'%HISTORY_NS).text) # looks to be UTC
                 duration = int(elem.find('{%s}duration'%HISTORY_NS).text)
                 ip_address = elem.find('{%s}ipAddress'%HISTORY_NS).text
                 attendees_hash.setdefault(email,[]).append(Attendee(email=email,started_at=started_at,stopped_at=stopped_at,duration=duration,ip_address=ip_address))
