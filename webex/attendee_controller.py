@@ -50,13 +50,13 @@ DELETE_BY_EMAIL_XML = """
 
 LIST_REGISTRANTS_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.attendee.LstMeetingAttendee">
-  <meetingKey>%s</meetingKey>
+  <meetingKey>%s</meetingKey>%s
 </bodyContent>
 """
 
 LIST_ATTENDEES_XML = """
 <bodyContent xsi:type= "java:com.webex.service.binding.history.LsteventattendeeHistory">
-  <sessionKey>%s</sessionKey>
+  <sessionKey>%s</sessionKey>%s
 </bodyContent>
 """
 
@@ -66,19 +66,20 @@ class AttendeeController(BaseController):
         self.event = event
         self.log = logging_glue.get_log('webex.attendee_controller')
 
-    def _log(self, action, attendee=None):
+    def _log(self, action, attendee=None, level='info'):
         email = attendee and attendee.email or '?'
-        self.log.info('%s... (email=%s event=%s)' % (action, email, self.event.title))
+        headline = '%s... (email=%s event=%s)' % (action, email, self.event.title)
+        getattr(self.log, level)(headline)
         if attendee is not None:
             self.log.debug('%s...   attendee=%s   event=%s' % (
                 action,
-                pformat(vars(attendee), width=sys.maxint) or '',
+                attendee and pformat(vars(attendee), width=sys.maxint) or '',
                 pformat(vars(self.event), width=sys.maxint) 
             ))
 
-    def create(self, attendee):
+    def create_invitee(self, attendee):
         xml = CREATE_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
-        self._log("creating attendee", attendee)
+        self.info("creating attendee", attendee)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}attendeeId"%ATTENDEE_NS)
@@ -87,9 +88,9 @@ class AttendeeController(BaseController):
                 return attendee
         return False
 
-    def register(self, attendee):
+    def create_registrant(self, attendee):
         xml = REGISTER_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
-        self._log("registering attendee", attendee)
+        self.info("registering attendee", attendee)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find('{%s}register'%ATTENDEE_NS).find('{%s}attendeeID'%ATTENDEE_NS)
@@ -105,15 +106,15 @@ class AttendeeController(BaseController):
             xml = DELETE_BY_EMAIL_XML % (attendee.email, self.event.session_key)
         elif attendee.id:
             xml = DELETE_BY_ID_XML % attendee.id
-        self._log("deleting attendee", attendee)
+        self.info("deleting attendee", attendee)
         response = self.query(xml)
         if response.success:
             return attendee
         return False
 
-    def list_registrants(self):
-        xml = LIST_REGISTRANTS_XML % self.event.session_key
-        self._log("listing registrants")
+    def _list_registrants_batch(self, **options):
+        xml = LIST_REGISTRANTS_XML % (self.event.session_key, options.get('list_options_xml',''))
+        self.debug("listing registrants (batch #%s)" % options.get('batch_number','?'))
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:
@@ -123,12 +124,18 @@ class AttendeeController(BaseController):
                 last_name = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}lastName'%COMMON_NS).text
                 id = elem.find('{%s}attendeeId'%ATTENDEE_NS).text.strip()
                 attendees.append(Attendee(id=id, email=email, first_name=first_name, last_name=last_name))
-            self._log("listed %s registrants" % len(attendees))
+            self.debug("listed %s registrants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
         return attendees
 
-    def list_attendants(self):
-        xml = LIST_ATTENDEES_XML % self.event.session_key
-        self._log("listing attendants")
+    def list_registrants(self, **options):
+        self.debug("listing registrants")
+        items = self.assemble_batches(self._list_registrants_batch, **options)
+        self.info("listed %s registrants" % len(items))
+        return items
+
+    def _list_attendants_batch(self, **options):
+        xml = LIST_ATTENDEES_XML % (self.event.session_key, options.get('list_options_xml',''))
+        self.debug("listing attendants (batch #%s)" % options.get('batch_number','?'))
         response = self.query(xml, empty_list_ok=True)
         attendees = []
         if response.success:
@@ -146,9 +153,15 @@ class AttendeeController(BaseController):
                 for i in range(len(value)-1):
                     attendee.merge(value[i+1])
                 attendees.append(attendee)
-            self._log("listed %s attendants" % len(attendees))
-                
+            self.debug("listed %s attendants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
         return attendees
+
+    def list_attendants(self, **options):
+        self.debug("listing attendants")
+        items = self.assemble_batches(self._list_attendants_batch, **options)
+        self.info("listed %s attendants" % len(items))
+        return items
+
 
     def list(self):
         if self.event.starts_at > sanetime():
@@ -163,6 +176,4 @@ class AttendeeController(BaseController):
           
         return h.values() 
 
-
- 
 

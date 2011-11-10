@@ -23,8 +23,6 @@ def configure_log():
     log.addHandler(file_handler)
     log.addHandler(console_handler)
 
-    logging.getLogger("webex").setLevel(logging.INFO)
-
     return log
 
 configure_log()

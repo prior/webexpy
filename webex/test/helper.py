@@ -27,7 +27,7 @@ def get_account():
 
 UNITTEST_EVENT_DESCRIPTION = """This is a fake/dummy webinar event created by the unittest system to verify the WebEx systems are operational.  These events are normally deleted immediately after creation, but in the case that you are reading this, then some code failed along the way.  It's likely a temporary outage on the WebEx side.  Please feel free to delete this event manually and let us know if these keep cropping up."""
 
-def generate_event(minute_distance = 15):
+def generate_event(minute_distance = 30):
     starts_at = sanetztime(tz='America/New_York')+minute_distance*60*1000**2
     title = "Dummy UnitTest Event [%s]" % str(uuid4())[0:16]
     return Event(title, starts_at, 90, UNITTEST_EVENT_DESCRIPTION)

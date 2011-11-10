@@ -52,14 +52,7 @@ DELETE_XML = """
 
 LIST_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">
-  <listControl>
-    <startFrom>1</startFrom>
-    <maximumNum>1000</maximumNum>
-  </listControl>
-  <order>
-    <orderBy>STARTTIME</orderBy>
-    <orderAD>DESC</orderAD>
-  </order>
+  %s
 </bodyContent>
 """
 
@@ -68,22 +61,17 @@ class EventController(BaseController):
         super(EventController, self).__init__(account)
         self.log = logging_glue.get_log('webex.event_controller')
 
-    def debug(self, action, event=None):
-        s = action
-        s = '%s (webex_id=%s)' % (action, self.account.webex_id)
-        s += event and '\n====event\n%s\n' % pformat(vars(event)) or ''
-        self.log.debug(s)
-
-    def _log(self, action, event=None):
+    def _log(self, action, event=None, level='info'):
         title = event and event.title or '?'
-        self.log.info('%s... (event=%s account=%s)' % (action, title, self.account.webex_id))
+        headline = '%s... (event=%s account=%s)' % (action, title, self.account.webex_id)
+        getattr(self.log, level)(headline)
         if event is not None:
             self.log.debug('%s...   event=%s   account=%s' % (
                 action,
-                pformat(vars(event), width=sys.maxint) or '',
+                event and pformat(vars(event), width=sys.maxint) or '',
                 pformat(vars(self.account), width=sys.maxint) 
             ))
-        
+
     def create(self, event):
         xml = CREATE_XML % (
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
@@ -91,7 +79,7 @@ class EventController(BaseController):
             timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
             event.title,
             event.description )
-        self._log("creating event", event)
+        self.info("creating event", event)
         response = self.query(xml)
         if response.success:
             elem = response.body_content.find("{%s}sessionKey"%EVENT_NS)
@@ -108,7 +96,7 @@ class EventController(BaseController):
             timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
             event.title,
             event.description )
-        self._log("updating event", event)
+        self.info("updating event", event)
         response = self.query(xml)
         if response.success:
             return event
@@ -118,15 +106,16 @@ class EventController(BaseController):
         if event_id and not event:
             event = Event(session_key=event_id)
         xml = DELETE_XML % event.session_key
-        self._log("deleting event", event)
+        self.info("deleting event", event)
         response = self.query(xml)
         if response.success:
             return event
         return False
 
-    def list(self):
-        self._log("listing events")
-        response = self.query(LIST_XML)
+    def _list_batch(self, **options):
+        xml = LIST_XML % options.get('list_options_xml','')
+        self.debug("listing events (batch #%s)" % options.get('batch_number','?'))
+        response = self.query(xml, empty_list_ok=True)
         events = []
         if response.success:
             for elem in response.body_content.findall("{%s}event"%EVENT_NS):
@@ -139,7 +128,12 @@ class EventController(BaseController):
                 starts_at = sanetztime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
                 event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
-            return events
-            self._log("listed %s events" % len(events))
-        return False
+            self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
+        return events
+
+    def list(self, **options):
+        self.debug("listing events")
+        items = self.assemble_batches(self._list_batch, **options)
+        self.info("listed %s events" % len(items))
+        return items
 
