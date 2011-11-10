@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='pywebex',
-    version='1.1.3',
+    version='1.2.0',
     description='Python WebEx Api Wrapper',
     author='Michael Prior',
     author_email='prior@cracklabs.com',
