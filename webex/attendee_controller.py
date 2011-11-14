@@ -120,8 +120,11 @@ class AttendeeController(BaseController):
         if response.success:
             for elem in response.body_content.findall('{%s}attendee'%ATTENDEE_NS):
                 email = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}email'%COMMON_NS).text
-                first_name = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}firstName'%COMMON_NS).text
-                last_name = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}lastName'%COMMON_NS).text
+                name_elem = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}name'%COMMON_NS)
+                first_name_elem = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}firstName'%COMMON_NS)
+                last_name_elem = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}lastName'%COMMON_NS)
+                first_name = name_elem and name_elem.text.split(' ')[0] or first_name_elem and first_name_elem.text or None
+                last_name = name_elem and ' '.join(name_elem.text.split(' ')[1:]) or last_name_elem and last_name_elem.text or None
                 id = elem.find('{%s}attendeeId'%ATTENDEE_NS).text.strip()
                 attendees.append(Attendee(id=id, email=email, first_name=first_name, last_name=last_name))
             self.debug("listed %s registrants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
