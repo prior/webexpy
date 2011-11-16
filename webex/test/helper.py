@@ -10,7 +10,7 @@ from webex.event import Event
 from webex.attendee import Attendee
 
 
-def get_account():
+def get_account(key='default'):
     filename = 'test_credentials.json'
     try:
         raw_text = open(os.path.join(os.path.dirname(__file__), filename)).read()
@@ -18,7 +18,7 @@ def get_account():
         raise WebExError, """Unable to open '%s' for integration tests.\n
   These tests rely on the existence of that file and on it having valid webex credentials.""" % filename
     try:
-        creds = json.loads(raw_text)
+        creds = json.loads(raw_text)[key]
     except ValueError:
         raise WebExError, """'%s' doesn't appar to be valid json!\n
   These tests rely on the existence of that file and on it having valid webex credentials.""" % filename
