@@ -131,7 +131,7 @@ class EventController(BaseController):
             self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
         return events
 
-    def list(self, **options):
+    def list_(self, **options):
         self.debug("listing events")
         items = self.assemble_batches(self._list_batch, **options)
         self.info("listed %s events" % len(items))

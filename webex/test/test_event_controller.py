@@ -22,11 +22,11 @@ class EventControllerTest(unittest2.TestCase):
     @attr('api')
     def test_list(self):
         new_events = [helper.generate_event(), helper.generate_event()]
-        session_keys = [ev.session_key for ev in self.event_controller.list()]
+        session_keys = [ev.session_key for ev in self.event_controller.list_()]
         for ev in new_events:
             self.assertNotIn(ev.session_key, session_keys)
             self.event_controller.create(ev)
-        session_keys = [ev.session_key for ev in self.event_controller.list()]
+        session_keys = [ev.session_key for ev in self.event_controller.list_()]
         for ev in new_events:
             self.assertIn(ev.session_key, session_keys)
             self.event_controller.delete(ev)
@@ -35,7 +35,7 @@ class EventControllerTest(unittest2.TestCase):
     def test_noop_list(self):
         account = helper.get_account('care2')
         event_controller = EventController(account)
-        event_controller.list()
+        event_controller.list_()
         self.assertTrue(True)
 
     @attr('api')
@@ -43,7 +43,7 @@ class EventControllerTest(unittest2.TestCase):
         event = helper.generate_event()
         self.assertIsNone(event.session_key)
         self.assertEquals(event, self.event_controller.create(event))
-        session_keys = [ev.session_key for ev in self.event_controller.list()]
+        session_keys = [ev.session_key for ev in self.event_controller.list_()]
         self.assertTrue(event.session_key)
         self.assertTrue(event.session_key in session_keys)
         self.event_controller.delete(event)
@@ -59,12 +59,12 @@ class EventControllerTest(unittest2.TestCase):
         event1 = helper.generate_event()
         event2 = helper.generate_event()
         self.event_controller.create(event1)
-        event = [ev for ev in self.event_controller.list() if ev.session_key == event1.session_key][0]
+        event = [ev for ev in self.event_controller.list_() if ev.session_key == event1.session_key][0]
         self.assertEquals(event.title, event1.title)
         self.assertNotEquals(event.title, event2.title)
         event.title = event2.title
         self.event_controller.update(event)
-        event = [ev for ev in self.event_controller.list() if ev.session_key == event1.session_key][0]
+        event = [ev for ev in self.event_controller.list_() if ev.session_key == event1.session_key][0]
         self.assertEquals(event.title, event2.title)
         self.assertNotEquals(event.title, event1.title)
 
@@ -81,7 +81,7 @@ class EventControllerTest(unittest2.TestCase):
 
     def test_list_response_parsing(self):
         self.event_controller.xml_override = open(os.path.join(os.path.dirname(__file__),'example_LstsummaryEventResponse.xml')).read()
-        event_list = self.event_controller.list()
+        event_list = self.event_controller.list_()
         self.assertEqual(3, len(event_list))
         event = event_list[0]
         self.assertIsNotNone(event)

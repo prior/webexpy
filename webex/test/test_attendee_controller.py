@@ -66,16 +66,16 @@ class AttendeeControllerTest(unittest2.TestCase):
         attendee = helper.generate_attendee()
         attendee = self.attendee_controller.create_invitee(attendee)
         self.assertTrue(attendee)
-        self.assertIn(attendee.id, [a.id for a in self.attendee_controller.list()])
+        self.assertIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.id, [a.id for a in self.attendee_controller.list()])
+        self.assertNotIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
 
         attendee = helper.generate_attendee()
         attendee = self.attendee_controller.create_registrant(attendee)
         self.assertTrue(attendee)
-        self.assertIn(attendee.id, [a.id for a in self.attendee_controller.list()])
+        self.assertIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.id, [a.id for a in self.attendee_controller.list()])
+        self.assertNotIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
 
     @attr('api')
     def test_good_delete_by_email(self):
@@ -83,17 +83,17 @@ class AttendeeControllerTest(unittest2.TestCase):
         attendee = self.attendee_controller.create_invitee(attendee)
         self.assertTrue(attendee)
         attendee.id = None
-        self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list()])
+        self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list()])
+        self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
 
         attendee = helper.generate_attendee()
         attendee = self.attendee_controller.create_registrant(attendee)
         self.assertTrue(attendee)
         attendee.id = None
-        self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list()])
+        self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list()])
+        self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
 
     @attr('api')
     def test_batching_slicing_and_dicing(self):
