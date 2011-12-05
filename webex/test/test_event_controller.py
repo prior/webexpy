@@ -31,12 +31,12 @@ class EventControllerTest(unittest2.TestCase):
             self.assertIn(ev.session_key, session_keys)
             self.event_controller.delete(ev)
 
-    @attr('api')
-    def test_noop_list(self):
-        account = helper.get_account('care2')
-        event_controller = EventController(account)
-        event_controller.list_()
-        self.assertTrue(True)
+    #@attr('api')
+    #def test_noop_list(self):
+        #account = helper.get_account('care2')
+        #event_controller = EventController(account)
+        #event_controller.list_()
+        #self.assertTrue(True)
 
     @attr('api')
     def test_good_create(self):

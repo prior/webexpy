@@ -19,20 +19,20 @@ class BaseControllerTest(unittest2.TestCase):
         self.account.password = 'bad_password'
         with self.assertRaises(WebExError):
             self.account.rebuild_request_xml_template()
-            EventController(self.account).list()
+            EventController(self.account).list_()
 
     def test_invalid_site_name(self):
         self.account.site_name = 'invalid_si@#$%^te_name'
         with self.assertRaises(WebExError):
             self.account.rebuild_request_xml_template()
-            EventController(self.account).list()
+            EventController(self.account).list_()
 
     @attr('api')
     def test_wrong_site_name(self):
         self.account.site_name = 'bad_site_name'
         with self.assertRaises(WebExError):
             self.account.rebuild_request_xml_template()
-            EventController(self.account).list()
+            EventController(self.account).list_()
 
     @attr('api')
     def test_version(self):
