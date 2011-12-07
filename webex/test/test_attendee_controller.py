@@ -4,6 +4,7 @@ from nose.plugins.attrib import attr
 from webex.error import WebExError
 from webex.event_controller import EventController
 from webex.attendee_controller import AttendeeController
+from sanetime import sanetime
 
 import helper
 import logger
@@ -35,6 +36,20 @@ class AttendeeControllerTest(unittest2.TestCase):
         self.assertIsNone(attendee.id)
         self.assertTrue(self.attendee_controller.create_registrant(attendee))
         self.assertIsNotNone(attendee.id)
+
+    @attr('api')
+    def test_bulk_create_registrants(self):
+        size = 300
+        attendees = []
+        for i in xrange(size):
+            attendee = helper.generate_attendee()
+            attendees.append(attendee)
+            self.assertIsNone(attendee.id)
+        starts_at = sanetime()
+        self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
+        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+        for i in xrange(size):
+            self.assertIsNotNone(attendees[i].id)
 
     @attr('api')
     def test_list_registrants(self):
@@ -112,16 +127,55 @@ class AttendeeControllerTest(unittest2.TestCase):
 
     @unittest2.skip('this test takes a while')
     @attr('api')
-    def test_volume_batching(self):
+    def test_volume_batching(self):   # looks like larger number is better here -- going with 500 for default
         # setup
         expected_attendee_ids = set()
-        for i in xrange(101):
-            attendee = helper.generate_attendee()
-            self.assertTrue(self.attendee_controller.create_registrant(attendee))
-            expected_attendee_ids.add(attendee.id)
+        attendees = []
+        for i in xrange(400):
+            attendees.append(helper.generate_attendee())
+        self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
+        for i in xrange(400):
+            self.assertTrue(attendees[i].id)
+        expected_attendee_ids = set(a.id for a in attendees)
 
-        registrants = self.attendee_controller.list_registrants()
+        starts_at = sanetime()
+        registrants = self.attendee_controller.list_registrants(batch_size=25)
+        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+        
         actual_attendee_ids = set(a.id for a in registrants)
+        self.assertEquals(400, len(actual_attendee_ids))
+        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
+
+        starts_at = sanetime()
+        registrants = self.attendee_controller.list_registrants(batch_size=50)
+        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+
+        actual_attendee_ids = set(a.id for a in registrants)
+        self.assertEquals(400, len(actual_attendee_ids))
+        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
+
+        starts_at = sanetime()
+        registrants = self.attendee_controller.list_registrants(batch_size=100)
+        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+
+        actual_attendee_ids = set(a.id for a in registrants)
+        self.assertEquals(400, len(actual_attendee_ids))
+        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
+
+        starts_at = sanetime()
+        registrants = self.attendee_controller.list_registrants(batch_size=200)
+        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+
+        actual_attendee_ids = set(a.id for a in registrants)
+        self.assertEquals(400, len(actual_attendee_ids))
+        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
+
+        starts_at = sanetime()
+        registrants = self.attendee_controller.list_registrants(batch_size=400)
+        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+
+        actual_attendee_ids = set(a.id for a in registrants)
+        self.assertEquals(400, len(actual_attendee_ids))
         self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
 

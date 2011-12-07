@@ -45,7 +45,7 @@ class BaseController(object):
         return Response(Request(self.account, body_content), xml_override=getattr(self,'xml_override',None), empty_list_ok=empty_list_ok)
 
     def assemble_batches(self, listing_function, **options):
-        batch_size = min(options.pop('batch_size', 10), 50) # can't go over 50 with some methods
+        batch_size = min(options.pop('batch_size', 10), 500) # can't go over 50 with some methods
         start_from = options.pop('start_from',None) or options.pop('startFrom',1)
         offset = options.pop('offset', start_from-1)
         max_ = options.pop('max',None) or options.get('max_number',None) or options.get('maxNumber',None)

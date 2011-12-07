@@ -33,6 +33,24 @@ REGISTER_XML = """
 </bodyContent>
 """
 
+INNER_REGISTER_XML = """
+<attendees>
+    <person>
+        <firstName>%s</firstName>
+        <lastName>%s</lastName>
+        <email>%s</email>
+    </person>
+    <sessionKey>%s</sessionKey>
+    <joinStatus>REGISTER</joinStatus>
+</attendees>
+"""
+
+OUTER_REGISTER_XML = """
+<bodyContent xsi:type= "java:com.webex.service.binding.attendee.RegisterMeetingAttendee">
+    %s
+</bodyContent>
+"""
+
 DELETE_BY_ID_XML = """
 <bodyContent xsi:type= "java:com.webex.service.binding.attendee.DelMeetingAttendee">
   <attendeeID>%s</attendeeID>
@@ -99,6 +117,27 @@ class AttendeeController(BaseController):
                 return attendee
         return False
 
+    def bulk_create_registrants(self, attendees):
+        batch_size = 50 
+        batch_index = 0
+        self.info("registering %s attendees in batches of %s" % (len(attendees), batch_size))
+        while batch_index < len(attendees):
+            xmls = []
+            for attendee in attendees[batch_index:batch_index+batch_size]:
+                xmls.append(INNER_REGISTER_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key))
+            xml = OUTER_REGISTER_XML % '\n'.join(xmls)
+            response = self.query(xml)
+            if response.success:
+                i = 0
+                for reg_elem in response.body_content.iter('{%s}register'%ATTENDEE_NS):
+                    att_elem = reg_elem.find('{%s}attendeeID'%ATTENDEE_NS)
+                    attendees[batch_index+i].id = att_elem.text
+                    i += 1
+            else:
+                return attendees
+            batch_index+=batch_size
+        return attendees
+
     def delete(self, attendee=None, attendee_id=None):
         if attendee_id and not attendee:
             attendee = Attendee(id=attendee_id)
@@ -132,6 +171,7 @@ class AttendeeController(BaseController):
 
     def list_registrants(self, **options):
         self.debug("listing registrants")
+        options.setdefault('batch_size',500)
         items = self.assemble_batches(self._list_registrants_batch, **options)
         self.info("listed %s registrants" % len(items))
         return items
