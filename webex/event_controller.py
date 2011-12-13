@@ -76,7 +76,7 @@ class EventController(BaseController):
         xml = CREATE_XML % (
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
-            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
+            timezone.get_id(event.starts_at.tz.zone),
             event.title,
             event.description )
         self.info("creating event", event)
@@ -93,7 +93,7 @@ class EventController(BaseController):
             event.session_key,
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
-            timezone.PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[event.starts_at.tz.zone],
+            timezone.get_id(event.starts_at.tz.zone),
             event.title,
             event.description )
         self.info("updating event", event)

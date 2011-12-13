@@ -1,3 +1,5 @@
+from sanetime import sanetime
+
 
 TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
     (0, 'GMT-12:00, Dateline (Eniwetok)', None), # has no standard pytz label available
@@ -71,4 +73,18 @@ for webex_timezone_id, webex_label, pytz_label in TIMEZONE_DATA:
         WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[webex_timezone_id] = pytz_label
         PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[pytz_label] = webex_timezone_id
 
+
+# trying to find an equivalent timezone that webex actually knows about
+def get_id(timezone_label):
+    if timezone_label in PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP:
+        return PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label]
+
+    us = 1000**2*60**2*24*365*30
+    expected_st = sanetime(us,tz=timezone_label)
+    for webex_timezone_id, webex_label, pytz_label in TIMEZONE_DATA:
+        if pytz_label is not None:
+            actual_st = sanetime(us, tz=pytz_label)
+            if expected_st == actual_st:
+                PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label] = webex_timezone_id
+            
 
