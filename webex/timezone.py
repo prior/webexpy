@@ -1,8 +1,7 @@
 from sanetime import sanetime
 
-
-TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
-    (0, 'GMT-12:00, Dateline (Eniwetok)', None), # has no standard pytz label available
+TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label(s)
+    (0, 'GMT-12:00, Dateline (Eniwetok)'), # has no standard pytz label available
     (1, 'GMT-11:00, Samoa (Samoa)', 'Pacific/Apia'), # GMT-11:00 Samoa best guess
     (2, 'GMT-10:00, Hawaii (Honolulu)', 'Pacific/Honolulu'),
     (3, 'GMT-09:00, Alaska (Anchorage)', 'America/Anchorage'),
@@ -13,7 +12,7 @@ TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
     (8, 'GMT-06:00, Mexico (Mexico City, Tegucigalpa)', 'America/Mexico_City'),
     (9, 'GMT-06:00, Central (Regina)', 'America/Regina'),
     (10, 'GMT-05:00, S. America Pacific (Bogota)', 'America/Bogota'),
-    (11, 'GMT-05:00, Eastern (New York)', 'America/New_York'),
+    (11, 'GMT-05:00, Eastern (New York)', 'America/New_York', 'US/Eastern'),
     (12, 'GMT-05:00, Eastern (Indiana)', 'America/Indiana/Indianapolis'),
     (13, 'GMT-04:00, Atlantic (Halifax)', 'America/Halifax'),
     (14, 'GMT-04:00, S. America Western (Caracas)', 'America/Caracas'),
@@ -26,10 +25,10 @@ TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
     (21, 'GMT+00:00, GMT (London)', 'Europe/London'),
     (22, 'GMT+01:00, Europe (Amsterdam)', 'Europe/Amsterdam'),
     (23, 'GMT+01:00, Europe (Berlin)', 'Europe/Paris'),
-    (24, None, None),
+    (24, None),
     (25, 'GMT+01:00, Europe (Paris)', 'Europe/Berlin'),
     (26, 'GMT+02:00, Greece (Athens)', 'Europe/Athens'),
-    (27, None, None),
+    (27, None),
     (28, 'GMT+02:00, Egypt (Cairo)', 'Africa/Cairo'),
     (29, 'GMT+02:00, South Africa (Pretoria)', 'Africa/Johannesburg'), # GMT+02:00 Pretoria best guess
     (30, 'GMT+02:00, Northern Europe (Helsinki)', 'Europe/Helsinki'),
@@ -68,9 +67,13 @@ TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label
 
 PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP = {}
 WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP = {}
-for webex_timezone_id, webex_label, pytz_label in TIMEZONE_DATA:
-    if pytz_label is not None:
-        WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[webex_timezone_id] = pytz_label
+for tuple_ in TIMEZONE_DATA:
+    list_ = list(tuple_)
+    webex_timezone_id = list_.pop(0)
+    webex_label = list_.pop(0)
+    if list_:
+        WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[webex_timezone_id] = list_[0]
+    for pytz_label in list_:
         PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[pytz_label] = webex_timezone_id
 
 
@@ -80,11 +83,13 @@ def get_id(timezone_label):
         return PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label]
 
     us = 1000**2*60**2*24*365*30
-    expected_st = sanetime(us,tz=timezone_label)
+    dt = sanetime(us).to_naive_datetime()
+    st = sanetime(dt, tz=timezone_label)
     for webex_timezone_id, webex_label, pytz_label in TIMEZONE_DATA:
         if pytz_label is not None:
-            actual_st = sanetime(us, tz=pytz_label)
-            if expected_st == actual_st:
+            testing_st = sanetime(dt, tz=pytz_label)
+            if st == testing_st:
                 PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label] = webex_timezone_id
-            
+                break
+    return PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP.get(timezone_label)
 
