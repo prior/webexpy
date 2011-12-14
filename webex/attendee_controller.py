@@ -206,12 +206,13 @@ class AttendeeController(BaseController):
         return items
 
 
-    def list_(self):
+    def list_(self, **options):
         if self.event.starts_at > sanetime():
             return self.list_registrants()
         lst = self.list_registrants() + self.list_attendants()
         h = {}
         for attendee in lst:
+            if options.get('max') and len(h) >= options['max']: break;
             if h.get(attendee.email) is None:
                 h[attendee.email] = attendee
             else:
