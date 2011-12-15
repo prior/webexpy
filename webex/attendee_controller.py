@@ -28,7 +28,7 @@ REGISTER_XML = """
         <email>%s</email>
     </person>
     <sessionKey>%s</sessionKey>
-    <joinStatus>REGISTER</joinStatus>
+    <joinStatus>ACCEPT</joinStatus>
   </attendees>
 </bodyContent>
 """
@@ -41,7 +41,7 @@ INNER_REGISTER_XML = """
         <email>%s</email>
     </person>
     <sessionKey>%s</sessionKey>
-    <joinStatus>REGISTER</joinStatus>
+    <joinStatus>ACCEPT</joinStatus>
 </attendees>
 """
 
