@@ -20,7 +20,7 @@ class EventControllerTest(unittest2.TestCase):
         self.event_controller = EventController(self.account)
 
     @attr('api')
-    def test_list(self):
+    def test_listing(self):
         new_events = [helper.generate_event(), helper.generate_event()]
         session_keys = [ev.session_key for ev in self.event_controller.list_()]
         for ev in new_events:
@@ -61,11 +61,17 @@ class EventControllerTest(unittest2.TestCase):
         self.event_controller.create(event1)
         event = [ev for ev in self.event_controller.list_() if ev.session_key == event1.session_key][0]
         self.assertEquals(event.title, event1.title)
+        self.assertEquals(event.starts_at.us/10**6, event1.starts_at.us/10**6)
+        self.assertEquals(event.duration, event1.duration)
+        self.assertEquals(event.description, event1.description)
         self.assertNotEquals(event.title, event2.title)
         event.title = event2.title
         self.event_controller.update(event)
         event = [ev for ev in self.event_controller.list_() if ev.session_key == event1.session_key][0]
         self.assertEquals(event.title, event2.title)
+        self.assertEquals(event.starts_at.us/10**6, event1.starts_at.us/10**6)
+        self.assertEquals(event.duration, event1.duration)
+        self.assertEquals(event.description, event1.description)
         self.assertNotEquals(event.title, event1.title)
 
     @attr('api')

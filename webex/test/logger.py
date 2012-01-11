@@ -6,7 +6,7 @@ import os
 def configure_log():
     
     log = logging.getLogger("webex")
-    log.setLevel(logging.INFO)
+    log.setLevel(logging.DEBUG)
 
     file_handler = logging.FileHandler(os.path.join(os.path.dirname(__file__), 'test_run.log'), mode="w")
     file_handler.setLevel(logging.DEBUG)
