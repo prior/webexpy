@@ -44,23 +44,29 @@ class BaseController(object):
     def query(self, body_content, empty_list_ok=False):
         return Response(Request(self.account, body_content), xml_override=getattr(self,'xml_override',None), empty_list_ok=empty_list_ok)
 
+    # attempts to deal with things moving underneath it by always going back halfway in batches-- effectively querying the entire thing twice over (cuz there's no other way to page through this thing with any certainty)
     def assemble_batches(self, listing_function, **options):
         batch_size = min(options.pop('batch_size', 10), 500) # can't go over 50 with some methods
         start_from = options.pop('start_from',None) or options.pop('startFrom',1)
         offset = options.pop('offset', start_from-1)
         max_ = options.pop('max',None) or options.get('max_number',None) or options.get('maxNumber',None)
+        pre_callback = options.pop('pre_callback',None)
+        item_id = options.pop('item_id',None)
+        batch_overlap = options.pop('batch_overlap', int(batch_size**0.39)-1) # only works when item_id specified as well
 
-        items = []
+        items = {}
         batch_number = 1
         while True:
-            local_max = min(max_ and max_-len(items) or batch_size, batch_size)
+            local_max = min(max_ and (max_-offset) or batch_size, batch_size)
             options['list_options_xml'] = LIST_OPTIONS_XML % (offset+1, local_max)
             options['batch_number'] = batch_number
+            pre_callback and pre_callback(batch_number)
             new_items = listing_function(**options)
-            items.extend(new_items)
+            for o in new_items:
+                items[item_id and getattr(o,item_id) or id(o)] = o
             if len(new_items) < batch_size or len(items)==max_:
                 break;
-            offset += batch_size
+            offset += batch_size - (item_id and batch_overlap or 0)
             batch_number += 1
-        return items
+        return items.values()
 

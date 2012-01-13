@@ -179,6 +179,35 @@ class AttendeeControllerTest(unittest2.TestCase):
         self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
 
+    @unittest2.skip('this test takes a while')
+    @attr('api')
+    def test_list_registrants_over_boundary_on_change(self):
+        # setup
+        TIMES = 10
+        expected_attendee_ids = set()
+        attendees = []
+        for i in xrange(2*TIMES):
+            attendees.append(helper.generate_attendee())
+        self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
+        expected_attendee_ids = [a.id for a in attendees]
+        self.assertTrue(all(expected_attendee_ids))
+        self.assertEquals(len(expected_attendee_ids), len(set(expected_attendee_ids)))
+
+        def list_pre_batch_callback(batch_number):
+            if batch_number<=TIMES:
+                attendees.append(helper.generate_attendee())
+                self.assertTrue(self.attendee_controller.create_registrant(attendees[-1]))
+                expected_attendee_ids.append(attendees[-1].id)
+                self.assertTrue(attendees[-1].id)
+
+        registrants = self.attendee_controller.list_registrants(batch_size=2, pre_callback=list_pre_batch_callback, batch_overlap=1)
+
+        actual_attendee_ids = [a.id for a in registrants]
+        self.assertTrue(all(actual_attendee_ids))
+        self.assertEquals(len(actual_attendee_ids), len(set(actual_attendee_ids)))
+        self.assertTrue(len(expected_attendee_ids) >= len(actual_attendee_ids))
+        self.assertFalse(set(actual_attendee_ids)-set(expected_attendee_ids))
+
 
 if __name__ == '__main__':
     unittest2.main()

@@ -172,6 +172,7 @@ class AttendeeController(BaseController):
     def list_registrants(self, **options):
         self.debug("listing registrants")
         options.setdefault('batch_size',500)
+        options.setdefault('item_id','id')
         items = self.assemble_batches(self._list_registrants_batch, **options)
         self.info("listed %s registrants" % len(items))
         return items
