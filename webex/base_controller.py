@@ -38,7 +38,8 @@ class BaseController(object):
         xml_in = "\n<bodyContent xsi:type=\"java:com.webex.service.binding.ep.GetAPIVersion\"></bodyContent>"
         xml_out = self.query(xml_in).body_content
         version = xml_out.find("{%s}apiVersion"%EP_NS).text
-        release = xml_out.find("{%s}release"%EP_NS).text
+        release_elem = xml_out.find("{%s}release"%EP_NS)
+        release = release_elem is not None and release_elem.text or ""
         return "%s : %s" % (version, release)
 
     def query(self, body_content, empty_list_ok=False):
