@@ -200,7 +200,7 @@ class AttendeeControllerTest(unittest2.TestCase):
                 expected_attendee_ids.append(attendees[-1].id)
                 self.assertTrue(attendees[-1].id)
 
-        registrants = self.attendee_controller.list_registrants(batch_size=2, pre_callback=list_pre_batch_callback, batch_overlap=1)
+        registrants = self.attendee_controller.list_registrants(batch_size=2, pre_callback=list_pre_batch_callback)
 
         actual_attendee_ids = [a.id for a in registrants]
         self.assertTrue(all(actual_attendee_ids))

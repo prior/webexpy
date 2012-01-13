@@ -52,7 +52,6 @@ class BaseController(object):
         max_ = options.pop('max',None) or options.get('max_number',None) or options.get('maxNumber',None)
         pre_callback = options.pop('pre_callback',None)
         item_id = options.pop('item_id',None)
-        batch_overlap = options.pop('batch_overlap', int(batch_size**0.39)-1) # only works when item_id specified as well
 
         items = {}
         batch_number = 1
@@ -66,7 +65,7 @@ class BaseController(object):
                 items[item_id and getattr(o,item_id) or id(o)] = o
             if len(new_items) < batch_size or len(items)==max_:
                 break;
-            offset += batch_size - (item_id and batch_overlap or 0)
+            offset += batch_size
             batch_number += 1
         return items.values()
 
