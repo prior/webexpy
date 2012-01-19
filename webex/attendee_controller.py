@@ -2,7 +2,7 @@ import sys
 import logging_glue
 from sanetime import sanetime
 from pprint import pformat
-from utils import ATTENDEE_NS,HISTORY_NS,COMMON_NS
+from utils import ATTENDEE_NS,HISTORY_NS,COMMON_NS,SERVICE_NS
 from base_controller import BaseController
 from attendee import Attendee
 
@@ -151,12 +151,16 @@ class AttendeeController(BaseController):
             return attendee
         return False
 
+
     def _list_registrants_batch(self, **options):
         xml = LIST_REGISTRANTS_XML % (self.event.session_key, options.get('list_options_xml',''))
         self.debug("listing registrants (batch #%s)" % options.get('batch_number','?'))
         response = self.query(xml, empty_list_ok=True)
         attendees = []
+        total = 0
         if response.success:
+            for elem in response.body_content.findall('{%s}matchingRecords'%ATTENDEE_NS):
+                total = int(elem.find('{%s}total'%SERVICE_NS).text)
             for elem in response.body_content.findall('{%s}attendee'%ATTENDEE_NS):
                 email = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}email'%COMMON_NS).text
                 name_elem = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}name'%COMMON_NS)
@@ -167,7 +171,7 @@ class AttendeeController(BaseController):
                 id = elem.find('{%s}attendeeId'%ATTENDEE_NS).text.strip()
                 attendees.append(Attendee(id=id, email=email, first_name=first_name, last_name=last_name))
             self.debug("listed %s registrants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
-        return attendees
+        return (attendees, total)
 
     def list_registrants(self, **options):
         self.debug("listing registrants")
@@ -177,13 +181,20 @@ class AttendeeController(BaseController):
         self.info("listed %s registrants" % len(items))
         return items
 
+    def _get_registrants_count(self):
+        return self.determine_count(self._list_registrants_batch)
+    registrants_count = property(_get_registrants_count)
+
     def _list_attendants_batch(self, **options):
         xml = LIST_ATTENDEES_XML % (self.event.session_key, options.get('list_options_xml',''))
         self.debug("listing attendants (batch #%s)" % options.get('batch_number','?'))
         response = self.query(xml, empty_list_ok=True)
         attendees = []
+        total = 0
         if response.success:
             attendees_hash = {}
+            for elem in response.body_content.findall('{%s}matchingRecords'%HISTORY_NS):
+                total = int(elem.find('{%s}total'%SERVICE_NS).text)
             for elem in response.body_content.findall('{%s}eventAttendeeHistory'%HISTORY_NS):
                 email = elem.find('{%s}attendeeEmail'%HISTORY_NS).text
                 started_at = sanetime(elem.find('{%s}startTime'%HISTORY_NS).text) # looks to be UTC
@@ -198,13 +209,17 @@ class AttendeeController(BaseController):
                     attendee.merge(value[i+1])
                 attendees.append(attendee)
             self.debug("listed %s attendants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
-        return attendees
+        return (attendees, total)
 
     def list_attendants(self, **options):
         self.debug("listing attendants")
         items = self.assemble_batches(self._list_attendants_batch, **options)
         self.info("listed %s attendants" % len(items))
         return items
+
+    def _get_attendants_count(self):
+        return self.determine_count(self._list_attendants_batch)
+    attendants_count = property(_get_attendants_count)
 
 
     def list_(self, **options):

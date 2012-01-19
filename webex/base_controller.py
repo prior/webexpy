@@ -61,7 +61,7 @@ class BaseController(object):
             options['list_options_xml'] = LIST_OPTIONS_XML % (offset+1, local_max)
             options['batch_number'] = batch_number
             pre_callback and pre_callback(batch_number)
-            new_items = listing_function(**options)
+            new_items = listing_function(**options)[0]
             for o in new_items:
                 items[item_id and getattr(o,item_id) or id(o)] = o
             if len(new_items) < batch_size or len(items)==max_:
@@ -69,4 +69,11 @@ class BaseController(object):
             offset += batch_size
             batch_number += 1
         return items.values()
+
+    def determine_count(self, listing_function):
+        options = {}
+        options['list_options_xml'] = LIST_OPTIONS_XML % (1,1)
+        options['batch_number'] = 0
+        return listing_function(**options)[1]
+
 

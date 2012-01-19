@@ -20,16 +20,19 @@ class EventControllerTest(unittest2.TestCase):
         self.event_controller = EventController(self.account)
 
     @attr('api')
-    def test_listing(self):
+    def test_listing_and_counts(self):
         new_events = [helper.generate_event(), helper.generate_event()]
         session_keys = [ev.session_key for ev in self.event_controller.list_()]
+        self.assertEquals(len(session_keys), self.event_controller.count)
         for ev in new_events:
             self.assertNotIn(ev.session_key, session_keys)
             self.event_controller.create(ev)
         session_keys = [ev.session_key for ev in self.event_controller.list_()]
+        self.assertEquals(len(session_keys), self.event_controller.count)
         for ev in new_events:
             self.assertIn(ev.session_key, session_keys)
             self.event_controller.delete(ev)
+
 
     #@attr('api')
     #def test_noop_list(self):

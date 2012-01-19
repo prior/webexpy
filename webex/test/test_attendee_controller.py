@@ -55,10 +55,12 @@ class AttendeeControllerTest(unittest2.TestCase):
     def test_list_registrants(self):
         new_registrants = [helper.generate_attendee(), helper.generate_attendee()]
         registrant_ids = [a.id for a in self.attendee_controller.list_registrants()]
+        self.assertEquals(len(registrant_ids), self.attendee_controller.registrants_count)
         for a in new_registrants:
             self.assertNotIn(a.id, registrant_ids)
             self.attendee_controller.create_registrant(a)
         registrant_ids = [a.id for a in self.attendee_controller.list_registrants()]
+        self.assertEquals(len(registrant_ids), self.attendee_controller.registrants_count)
         for a in new_registrants:
             self.assertIn(a.id, registrant_ids)
             self.attendee_controller.delete(a)
@@ -67,6 +69,7 @@ class AttendeeControllerTest(unittest2.TestCase):
     @attr('api')
     def test_list_attendants(self):
         attendee_list = self.attendee_controller.list_attendants()
+        self.assertEquals(len(attendee_list), self.attendee_controller.attendants_count)
         self.assertIsNotNone(attendee_list)
         for attendee in attendee_list:
             print attendee

@@ -3,7 +3,7 @@ import sys
 from sanetime import sanetztime
 import timezone
 from event import Event
-from utils import EVENT_NS
+from utils import EVENT_NS, SERVICE_NS
 from base_controller import BaseController
 from pprint import pformat
 
@@ -117,7 +117,10 @@ class EventController(BaseController):
         self.debug("listing events (batch #%s)" % options.get('batch_number','?'))
         response = self.query(xml, empty_list_ok=True)
         events = []
+        total = 0
         if response.success:
+            for elem in response.body_content.findall('{%s}matchingRecords'%EVENT_NS):
+                total = int(elem.find('{%s}total'%SERVICE_NS).text)
             for elem in response.body_content.findall("{%s}event"%EVENT_NS):
                 title = elem.find("{%s}sessionName"%EVENT_NS).text
                 starts_at = elem.find("{%s}startDate"%EVENT_NS).text
@@ -129,11 +132,18 @@ class EventController(BaseController):
                 event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
             self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
-        return events
+        return (events, total)
 
     def list_(self, **options):
         self.debug("listing events")
         items = self.assemble_batches(self._list_batch, **options)
         self.info("listed %s events" % len(items))
         return items
+
+    def _get_count(self):
+        return self.determine_count(self._list_batch)
+    count = property(_get_count)
+
+
+
 
