@@ -57,7 +57,7 @@ class BaseController(object):
         items = {}
         batch_number = 1
         while True:
-            local_max = min(max_ and (max_-offset) or batch_size, batch_size)
+            local_max = max(min(max_ is None and batch_size or (max_-len(items)), batch_size),0)
             options['list_options_xml'] = LIST_OPTIONS_XML % (offset+1, local_max)
             options['batch_number'] = batch_number
             pre_callback and pre_callback(batch_number)

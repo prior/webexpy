@@ -33,6 +33,16 @@ class EventControllerTest(unittest2.TestCase):
             self.assertIn(ev.session_key, session_keys)
             self.event_controller.delete(ev)
 
+    def test_listing_offsets(self):
+        event_count = self.event_controller.count
+        if event_count < 10:  # ensure we're working with at least 10 items
+            for i in xrange(event_count, 10, 1):
+                self.event_controller.create(helper.generate_event())
+            event_count = self.event_controller.count
+        self.assertTrue(event_count >= 10)
+        self.assertEquals(10, len(self.event_controller.list_(offset=0, max_number=10)))
+        self.assertEquals(3, len(self.event_controller.list_(offset=3, max_number=3)))
+        self.assertEquals(1, len(self.event_controller.list_(offset=1, max_number=1)))
 
     #@attr('api')
     #def test_noop_list(self):
