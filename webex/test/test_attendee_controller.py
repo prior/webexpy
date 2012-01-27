@@ -26,16 +26,16 @@ class AttendeeControllerTest(unittest2.TestCase):
     @attr('api')
     def test_create_invitee(self):
         attendee = helper.generate_attendee()
-        self.assertIsNone(attendee.id)
+        self.assertIsNone(attendee.attendee_id)
         self.assertTrue(self.attendee_controller.create_invitee(attendee))
-        self.assertIsNotNone(attendee.id)
+        self.assertIsNotNone(attendee.attendee_id)
 
     @attr('api')
     def test_create_registrant(self):
         attendee = helper.generate_attendee()
-        self.assertIsNone(attendee.id)
+        self.assertIsNone(attendee.attendee_id)
         self.assertTrue(self.attendee_controller.create_registrant(attendee))
-        self.assertIsNotNone(attendee.id)
+        self.assertIsNotNone(attendee.attendee_id)
 
     @attr('api')
     def test_bulk_create_registrants(self):
@@ -44,25 +44,25 @@ class AttendeeControllerTest(unittest2.TestCase):
         for i in xrange(size):
             attendee = helper.generate_attendee()
             attendees.append(attendee)
-            self.assertIsNone(attendee.id)
+            self.assertIsNone(attendee.attendee_id)
         starts_at = sanetime()
         self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
         print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
         for i in xrange(size):
-            self.assertIsNotNone(attendees[i].id)
+            self.assertIsNotNone(attendees[i].attendee_id)
 
     @attr('api')
     def test_list_registrants(self):
         new_registrants = [helper.generate_attendee(), helper.generate_attendee()]
-        registrant_ids = [a.id for a in self.attendee_controller.list_registrants()]
+        registrant_ids = [a.attendee_id for a in self.attendee_controller.list_registrants()]
         self.assertEquals(len(registrant_ids), self.attendee_controller.registrants_count)
         for a in new_registrants:
-            self.assertNotIn(a.id, registrant_ids)
+            self.assertNotIn(a.attendee_id, registrant_ids)
             self.attendee_controller.create_registrant(a)
-        registrant_ids = [a.id for a in self.attendee_controller.list_registrants()]
+        registrant_ids = [a.attendee_id for a in self.attendee_controller.list_registrants()]
         self.assertEquals(len(registrant_ids), self.attendee_controller.registrants_count)
         for a in new_registrants:
-            self.assertIn(a.id, registrant_ids)
+            self.assertIn(a.attendee_id, registrant_ids)
             self.attendee_controller.delete(a)
 
     # difficult to test, cuz no way to programatically make an attendant see a video-- have to test this manually
@@ -84,23 +84,23 @@ class AttendeeControllerTest(unittest2.TestCase):
         attendee = helper.generate_attendee()
         attendee = self.attendee_controller.create_invitee(attendee)
         self.assertTrue(attendee)
-        self.assertIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
+        self.assertIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
+        self.assertNotIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_()])
 
         attendee = helper.generate_attendee()
         attendee = self.attendee_controller.create_registrant(attendee)
         self.assertTrue(attendee)
-        self.assertIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
+        self.assertIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.id, [a.id for a in self.attendee_controller.list_()])
+        self.assertNotIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_()])
 
     @attr('api')
     def test_good_delete_by_email(self):
         attendee = helper.generate_attendee()
         attendee = self.attendee_controller.create_invitee(attendee)
         self.assertTrue(attendee)
-        attendee.id = None
+        attendee.attendee_id = None
         self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
         self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
@@ -108,7 +108,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         attendee = helper.generate_attendee()
         attendee = self.attendee_controller.create_registrant(attendee)
         self.assertTrue(attendee)
-        attendee.id = None
+        attendee.attendee_id = None
         self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
         self.assertTrue(self.attendee_controller.delete(attendee))
         self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list_()])
@@ -120,11 +120,11 @@ class AttendeeControllerTest(unittest2.TestCase):
         for i in xrange(5):
             attendee = helper.generate_attendee()
             self.assertTrue(self.attendee_controller.create_registrant(attendee))
-            expected_attendee_ids.add(attendee.id)
+            expected_attendee_ids.add(attendee.attendee_id)
 
         for i in xrange(5):
             registrants = self.attendee_controller.list_registrants(batch_size=i+1)
-            actual_attendee_ids = set(a.id for a in registrants)
+            actual_attendee_ids = set(a.attendee_id for a in registrants)
             self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
 
@@ -138,14 +138,14 @@ class AttendeeControllerTest(unittest2.TestCase):
             attendees.append(helper.generate_attendee())
         self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
         for i in xrange(400):
-            self.assertTrue(attendees[i].id)
-        expected_attendee_ids = set(a.id for a in attendees)
+            self.assertTrue(attendees[i].attendee_id)
+        expected_attendee_ids = set(a.attendee_id for a in attendees)
 
         starts_at = sanetime()
         registrants = self.attendee_controller.list_registrants(batch_size=25)
         print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
         
-        actual_attendee_ids = set(a.id for a in registrants)
+        actual_attendee_ids = set(a.attendee_id for a in registrants)
         self.assertEquals(400, len(actual_attendee_ids))
         self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
@@ -153,7 +153,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         registrants = self.attendee_controller.list_registrants(batch_size=50)
         print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
 
-        actual_attendee_ids = set(a.id for a in registrants)
+        actual_attendee_ids = set(a.attendee_id for a in registrants)
         self.assertEquals(400, len(actual_attendee_ids))
         self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
@@ -161,7 +161,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         registrants = self.attendee_controller.list_registrants(batch_size=100)
         print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
 
-        actual_attendee_ids = set(a.id for a in registrants)
+        actual_attendee_ids = set(a.attendee_id for a in registrants)
         self.assertEquals(400, len(actual_attendee_ids))
         self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
@@ -169,7 +169,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         registrants = self.attendee_controller.list_registrants(batch_size=200)
         print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
 
-        actual_attendee_ids = set(a.id for a in registrants)
+        actual_attendee_ids = set(a.attendee_id for a in registrants)
         self.assertEquals(400, len(actual_attendee_ids))
         self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
@@ -177,7 +177,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         registrants = self.attendee_controller.list_registrants(batch_size=400)
         print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
 
-        actual_attendee_ids = set(a.id for a in registrants)
+        actual_attendee_ids = set(a.attendee_id for a in registrants)
         self.assertEquals(400, len(actual_attendee_ids))
         self.assertEquals(expected_attendee_ids, actual_attendee_ids)
 
@@ -192,7 +192,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         for i in xrange(2*TIMES):
             attendees.append(helper.generate_attendee())
         self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
-        expected_attendee_ids = [a.id for a in attendees]
+        expected_attendee_ids = [a.attendee_id for a in attendees]
         self.assertTrue(all(expected_attendee_ids))
         self.assertEquals(len(expected_attendee_ids), len(set(expected_attendee_ids)))
 
@@ -200,12 +200,12 @@ class AttendeeControllerTest(unittest2.TestCase):
             if batch_number<=TIMES:
                 attendees.append(helper.generate_attendee())
                 self.assertTrue(self.attendee_controller.create_registrant(attendees[-1]))
-                expected_attendee_ids.append(attendees[-1].id)
-                self.assertTrue(attendees[-1].id)
+                expected_attendee_ids.append(attendees[-1].attendee_id)
+                self.assertTrue(attendees[-1].attendee_id)
 
         registrants = self.attendee_controller.list_registrants(batch_size=2, pre_callback=list_pre_batch_callback)
 
-        actual_attendee_ids = [a.id for a in registrants]
+        actual_attendee_ids = [a.attendee_id for a in registrants]
         self.assertTrue(all(actual_attendee_ids))
         self.assertEquals(len(actual_attendee_ids), len(set(actual_attendee_ids)))
         self.assertTrue(len(expected_attendee_ids) >= len(actual_attendee_ids))

@@ -102,7 +102,7 @@ class AttendeeController(BaseController):
         if response.success:
             elem = response.body_content.find("{%s}attendeeId"%ATTENDEE_NS)
             if elem is not None:
-                attendee.id = elem.text
+                attendee.attendee_id = elem.text
                 return attendee
         return False
 
@@ -113,7 +113,7 @@ class AttendeeController(BaseController):
         if response.success:
             elem = response.body_content.find('{%s}register'%ATTENDEE_NS).find('{%s}attendeeID'%ATTENDEE_NS)
             if elem is not None:
-                attendee.id = elem.text
+                attendee.attendee_id = elem.text
                 return attendee
         return False
 
@@ -131,7 +131,7 @@ class AttendeeController(BaseController):
                 i = 0
                 for reg_elem in response.body_content.iter('{%s}register'%ATTENDEE_NS):
                     att_elem = reg_elem.find('{%s}attendeeID'%ATTENDEE_NS)
-                    attendees[batch_index+i].id = att_elem.text
+                    attendees[batch_index+i].attendee_id = att_elem.text
                     i += 1
             else:
                 return attendees
@@ -140,11 +140,11 @@ class AttendeeController(BaseController):
 
     def delete(self, attendee=None, attendee_id=None):
         if attendee_id and not attendee:
-            attendee = Attendee(id=attendee_id)
+            attendee = Attendee(attendee_id=attendee_id)
         if attendee.email and self.event.session_key:
             xml = DELETE_BY_EMAIL_XML % (attendee.email, self.event.session_key)
-        elif attendee.id:
-            xml = DELETE_BY_ID_XML % attendee.id
+        elif attendee.attendee_id:
+            xml = DELETE_BY_ID_XML % attendee.attendee_id
         self.info("deleting attendee", attendee)
         response = self.query(xml)
         if response.success:
@@ -168,15 +168,15 @@ class AttendeeController(BaseController):
                 last_name_elem = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}lastName'%COMMON_NS)
                 first_name = name_elem is not None and name_elem.text.split(' ')[0] or first_name_elem is not None and first_name_elem.text or None
                 last_name = name_elem is not None and ' '.join(name_elem.text.split(' ')[1:]) or last_name_elem is not None and last_name_elem.text or None
-                id = elem.find('{%s}attendeeId'%ATTENDEE_NS).text.strip()
-                attendees.append(Attendee(id=id, email=email, first_name=first_name, last_name=last_name))
+                attendee_id = elem.find('{%s}attendeeId'%ATTENDEE_NS).text.strip()
+                attendees.append(Attendee(attendee_id=attendee_id, email=email, first_name=first_name, last_name=last_name))
             self.debug("listed %s registrants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
         return (attendees, total)
 
     def list_registrants(self, **options):
         self.debug("listing registrants")
         options.setdefault('batch_size',500)
-        options.setdefault('item_id','id')
+        options.setdefault('item_id','attendee_id')
         items = self.assemble_batches(self._list_registrants_batch, **options)
         self.info("listed %s registrants" % len(items))
         return items

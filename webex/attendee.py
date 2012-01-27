@@ -1,5 +1,5 @@
 class Attendee(object):
-    def __init__(self, email=None, first_name=None, last_name=None, started_at=None, stopped_at=None, duration=None, ip_address=None, id=None):
+    def __init__(self, email=None, first_name=None, last_name=None, started_at=None, stopped_at=None, duration=None, ip_address=None, attendee_id=None):
         super(Attendee,self).__init__()
         self.email = email
         self.first_name = first_name
@@ -8,7 +8,7 @@ class Attendee(object):
         self.stopped_at = stopped_at
         self.duration = duration
         self.ip_address = ip_address
-        self.id = id
+        self.attendee_id = attendee_id
 
     def merge(self, attendee):
         self.email = self.email or attendee.email
