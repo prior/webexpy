@@ -213,6 +213,8 @@ class AttendeeController(BaseController):
 
     def list_attendants(self, **options):
         self.debug("listing attendants")
+        options.setdefault('batch_size',10)
+        options.setdefault('item_id','email')
         items = self.assemble_batches(self._list_attendants_batch, **options)
         self.info("listed %s attendants" % len(items))
         return items
@@ -220,20 +222,5 @@ class AttendeeController(BaseController):
     def _get_attendants_count(self):
         return self.determine_count(self._list_attendants_batch)
     attendants_count = property(_get_attendants_count)
-
-
-    def list_(self, **options):
-        if self.event.starts_at > sanetime():
-            return self.list_registrants()
-        lst = self.list_registrants() + self.list_attendants()
-        h = {}
-        for attendee in lst:
-            if options.get('max') and len(h) >= options['max']: break;
-            if h.get(attendee.email) is None:
-                h[attendee.email] = attendee
-            else:
-                h[attendee.email] = h[attendee.email].merge(attendee)
-          
-        return h.values() 
 
 
