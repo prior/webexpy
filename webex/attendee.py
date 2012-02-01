@@ -36,6 +36,6 @@ class Attendee(object):
         return self.__unicode__() 
 
     def __unicode__(self):
-        return "%s (%s %s) {%s-%s for %sm} [%s] %s" % (self.email, self.first_name, self.last_name, self.started_at, self.stopped_at, self.duration, self.ip_address, self.id)
+        return "%s (%s %s) {%s-%s for %sm} [%s] %s" % (self.email, self.first_name, self.last_name, self.started_at, self.stopped_at, self.duration, self.ip_address, self.attendee_id)
 
 
