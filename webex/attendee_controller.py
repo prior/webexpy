@@ -7,14 +7,21 @@ from base_controller import BaseController
 from attendee import Attendee
 
 
+VERSION4_NAME_XML = """
+    <name>%s %s</name>
+"""
+VERSION5_NAME_XML = """
+    <firstName>%s</firstName>
+    <lastName>%s</lastName>
+"""
+
 CREATE_XML = """
 <bodyContent xsi:type= "java:com.webex.service.binding.attendee.CreateMeetingAttendee">
   <person>
-    <firstName>%s</firstName>
-    <lastName>%s</lastName>
-    <email>%s</email>
+    %s
+    <email>%%s</email>
   </person>
-  <sessionKey>%s</sessionKey>
+  <sessionKey>%%s</sessionKey>
   <joinStatus>INVITE</joinStatus>
 </bodyContent>
 """
@@ -23,11 +30,10 @@ REGISTER_XML = """
 <bodyContent xsi:type= "java:com.webex.service.binding.attendee.RegisterMeetingAttendee">
   <attendees>
     <person>
-        <firstName>%s</firstName>
-        <lastName>%s</lastName>
-        <email>%s</email>
+        %s
+        <email>%%s</email>
     </person>
-    <sessionKey>%s</sessionKey>
+    <sessionKey>%%s</sessionKey>
     <joinStatus>ACCEPT</joinStatus>
   </attendees>
 </bodyContent>
@@ -36,11 +42,10 @@ REGISTER_XML = """
 INNER_REGISTER_XML = """
 <attendees>
     <person>
-        <firstName>%s</firstName>
-        <lastName>%s</lastName>
-        <email>%s</email>
+        %s
+        <email>%%s</email>
     </person>
-    <sessionKey>%s</sessionKey>
+    <sessionKey>%%s</sessionKey>
     <joinStatus>ACCEPT</joinStatus>
 </attendees>
 """
@@ -84,6 +89,18 @@ class AttendeeController(BaseController):
         self.event = event
         self.log = logging_glue.get_log('webex.attendee_controller')
 
+    @property
+    def create_xml(self):
+        return CREATE_XML % (self.major_version == 4 and VERSION4_NAME_XML or VERSION5_NAME_XML,)
+
+    @property
+    def register_xml(self):
+        return REGISTER_XML % (self.major_version == 4 and VERSION4_NAME_XML or VERSION5_NAME_XML,)
+
+    @property
+    def inner_register_xml(self):
+        return INNER_REGISTER_XML % (self.major_version == 4 and VERSION4_NAME_XML or VERSION5_NAME_XML,)
+
     def _log(self, action, attendee=None, level='info'):
         email = attendee and attendee.email or '?'
         headline = '%s... (email=%s event=%s)' % (action, email, self.event.title)
@@ -96,7 +113,7 @@ class AttendeeController(BaseController):
             ))
 
     def create_invitee(self, attendee):
-        xml = CREATE_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
+        xml = self.create_xml % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
         self.info("creating attendee", attendee)
         response = self.query(xml)
         if response.success:
@@ -107,7 +124,7 @@ class AttendeeController(BaseController):
         return False
 
     def create_registrant(self, attendee):
-        xml = REGISTER_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
+        xml = self.register_xml % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key)
         self.info("registering attendee", attendee)
         response = self.query(xml)
         if response.success:
@@ -124,7 +141,7 @@ class AttendeeController(BaseController):
         while batch_index < len(attendees):
             xmls = []
             for attendee in attendees[batch_index:batch_index+batch_size]:
-                xmls.append(INNER_REGISTER_XML % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key))
+                xmls.append(self.inner_register_xml % (attendee.first_name, attendee.last_name, attendee.email, self.event.session_key))
             xml = OUTER_REGISTER_XML % '\n'.join(xmls)
             response = self.query(xml)
             if response.success:
@@ -196,6 +213,8 @@ class AttendeeController(BaseController):
             for elem in response.body_content.findall('{%s}matchingRecords'%HISTORY_NS):
                 total = int(elem.find('{%s}total'%SERVICE_NS).text)
             for elem in response.body_content.findall('{%s}eventAttendeeHistory'%HISTORY_NS):
+                email_elem = elem.find('{%s}attendeeEmail'%HISTORY_NS)
+                if email_elem is None: continue 
                 email = elem.find('{%s}attendeeEmail'%HISTORY_NS).text
                 started_at = sanetime(elem.find('{%s}startTime'%HISTORY_NS).text) # looks to be UTC
                 stopped_at = sanetime(elem.find('{%s}endTime'%HISTORY_NS).text) # looks to be UTC

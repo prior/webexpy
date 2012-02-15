@@ -14,6 +14,7 @@ class BaseController(object):
     def __init__(self, account):
         super(BaseController,self).__init__()
         self.account = account
+        self._major_version = None
 
     def _log(self):
         pass
@@ -41,6 +42,14 @@ class BaseController(object):
         release_elem = xml_out.find("{%s}release"%EP_NS)
         release = release_elem is not None and release_elem.text or ""
         return "%s : %s" % (version, release)
+
+    @property
+    def major_version(self):
+        if not self._major_version:
+            version = self.get_api_version()
+            number = float('.'.join(version.split(' : ')[0].split(' ')[-1].split('V')[-1].split('.')[:2]))
+            self._major_version = int(number)
+        return self._major_version
 
     def query(self, body_content, empty_list_ok=False):
         return Response(Request(self.account, body_content), xml_override=getattr(self,'xml_override',None), empty_list_ok=empty_list_ok)

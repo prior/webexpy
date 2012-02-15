@@ -39,6 +39,9 @@ class BaseControllerTest(unittest2.TestCase):
         version = BaseController(self.account).get_api_version()
         self.assertIn('WebEx XML API V', version)
 
+    @attr('api')
+    def test_major_version(self):
+        self.assertEquals(5, BaseController(self.account).major_version)
 
 if __name__ == '__main__':
     unittest2.main()

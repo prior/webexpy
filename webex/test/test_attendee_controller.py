@@ -31,14 +31,14 @@ class AttendeeControllerTest(unittest2.TestCase):
         self.assertIsNotNone(attendee.attendee_id)
 
     @attr('api')
-    def test_create_registrant(self):
+    def test_create_single_registrant(self):
         attendee = helper.generate_attendee()
         self.assertIsNone(attendee.attendee_id)
         self.assertTrue(self.attendee_controller.create_registrant(attendee))
         self.assertIsNotNone(attendee.attendee_id)
 
     @attr('api')
-    def test_bulk_create_registrants(self):
+    def test_create_bulk_registrants(self):
         size = 300
         attendees = []
         for i in xrange(size):
