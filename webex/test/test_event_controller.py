@@ -59,7 +59,15 @@ class EventControllerTest(unittest2.TestCase):
         session_keys = [ev.session_key for ev in self.event_controller.list_()]
         self.assertTrue(event.session_key)
         self.assertTrue(event.session_key in session_keys)
-        self.event_controller.delete(event)
+#        self.event_controller.delete(event)
+
+    @attr('api')
+    def test_listing_playground(self):
+        current_titles = [(e.session_key,e.title,e.starts_at,e.duration) for e in self.event_controller.list_()]
+        historical_titles = [(e.session_key,e.title,e.starts_at,e.duration) for e in self.event_controller.list_historical()]
+        from pprint import pprint;
+        pprint(current_titles)
+        pprint(historical_titles)
 
     @attr('api')
     def test_bad_create(self):

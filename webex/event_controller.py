@@ -3,7 +3,7 @@ import sys
 from sanetime import sanetztime
 import timezone
 from event import Event
-from utils import EVENT_NS, SERVICE_NS
+from utils import EVENT_NS, SERVICE_NS, HISTORY_NS
 from base_controller import BaseController
 from pprint import pformat
 
@@ -52,6 +52,12 @@ DELETE_XML = """
 
 LIST_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">
+  %s
+</bodyContent>
+"""
+
+HISTORICAL_LIST_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.history.LsteventsessionHistory">
   %s
 </bodyContent>
 """
@@ -134,10 +140,37 @@ class EventController(BaseController):
             self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
         return (events, total)
 
+    def _list_historical_batch(self, **options):
+        xml = HISTORICAL_LIST_XML % options.get('list_options_xml','')
+        self.debug("listing historical events (batch #%s)" % options.get('batch_number','?'))
+        response = self.query(xml, empty_list_ok=True)
+        events = []
+        total = 0
+        if response.success:
+            for elem in response.body_content.findall('{%s}matchingRecords'%HISTORY_NS):
+                total = int(elem.find('{%s}total'%SERVICE_NS).text)
+            for elem in response.body_content.findall("{%s}eventSessionHistory"%HISTORY_NS):
+                title = elem.find("{%s}confName"%HISTORY_NS).text
+                starts_at = elem.find("{%s}sessionStartTime"%HISTORY_NS).text
+                timezone_id = int(elem.find("{%s}timezone"%HISTORY_NS).text)
+                duration = int(elem.find("{%s}duration"%HISTORY_NS).text)
+                session_key = elem.find("{%s}sessionKey"%HISTORY_NS).text
+                starts_at = sanetztime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
+                event = Event(title, starts_at, duration, None, session_key)
+                events.append(event)
+            self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
+        return (events, total)
+
     def list_(self, **options):
         self.debug("listing events")
         items = self.assemble_batches(self._list_batch, **options)
         self.info("listed %s events" % len(items))
+        return items
+
+    def list_historical(self, **options):
+        self.debug("listing historical events")
+        items = self.assemble_batches(self._list_historical_batch, **options)
+        self.info("listed %s historical events" % len(items))
         return items
 
     def _get_count(self):
