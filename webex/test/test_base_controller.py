@@ -43,6 +43,10 @@ class BaseControllerTest(unittest2.TestCase):
     def test_major_version(self):
         self.assertEquals(5, BaseController(self.account).major_version)
 
+    @attr('api')
+    def test_password(self):
+        self.assertTrue(BaseController(self.account).password_required)
+
 if __name__ == '__main__':
     unittest2.main()
 

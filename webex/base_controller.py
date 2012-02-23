@@ -1,6 +1,10 @@
 from request import Request
 from response import Response
-from utils import EP_NS
+from utils import EP_NS, SITE_NS
+
+GET_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.site.GetSite" />
+"""
 
 LIST_OPTIONS_XML = """
   <listControl>
@@ -86,3 +90,15 @@ class BaseController(object):
         return listing_function(**options)[1]
 
 
+    @property
+    def password_required(self):
+        response = self.query(GET_XML)
+        if response.success:
+            parent_elem = response.body_content.find("{%s}siteInstance"%SITE_NS)
+            if parent_elem is None: return None
+            security_elem = parent_elem.find("{%s}securityOptions"%SITE_NS)
+            if security_elem is None: return None
+            password_elem = security_elem is not None and security_elem.find("{%s}allMeetingsPassword"%SITE_NS)
+            if password_elem is None: return None
+            return password_elem.text.lower()=='true'
+        return None

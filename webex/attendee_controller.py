@@ -49,6 +49,7 @@ INNER_REGISTER_XML = """
     </person>
     <sessionKey>%%s</sessionKey>
     <joinStatus>ACCEPT</joinStatus>
+    <emailInvitations>TRUE</emailInvitations>
 </attendees>
 """
 
