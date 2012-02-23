@@ -23,6 +23,7 @@ CREATE_XML = """
   </person>
   <sessionKey>%%s</sessionKey>
   <joinStatus>INVITE</joinStatus>
+  <emailInvitations>TRUE</emailInvitations>
 </bodyContent>
 """
 
@@ -35,6 +36,7 @@ REGISTER_XML = """
     </person>
     <sessionKey>%%s</sessionKey>
     <joinStatus>ACCEPT</joinStatus>
+    <emailInvitations>TRUE</emailInvitations>
   </attendees>
 </bodyContent>
 """
