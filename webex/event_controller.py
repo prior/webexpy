@@ -11,7 +11,7 @@ CREATE_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">
   <accessControl>
     <listing>PUBLIC</listing>
-    <sessionPassword>0000</sessionPassword>
+    %s
   </accessControl>
   <schedule>
     <startDate>%s</startDate>
@@ -29,7 +29,7 @@ UPDATE_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.SetEvent">
   <accessControl>
     <listing>PUBLIC</listing>
-    <sessionPassword>0000</sessionPassword>
+    %s
   </accessControl>
   <event:sessionKey>%s</event:sessionKey>
   <schedule>
@@ -79,7 +79,11 @@ class EventController(BaseController):
             ))
 
     def create(self, event):
+        password_xml = ''
+        if self.password_required:
+            password_xml = '<sessionPassword>0000</sessionPassword>'
         xml = CREATE_XML % (
+            password_xml,
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
             timezone.get_id(event.starts_at.tz.zone),
@@ -95,7 +99,11 @@ class EventController(BaseController):
         return False
 
     def update(self, event):
+        password_xml = ''
+        if self.password_required:
+            password_xml = '<sessionPassword>0000</sessionPassword>'
         xml = UPDATE_XML % (
+            password_xml,
             event.session_key,
             event.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
             event.duration,
