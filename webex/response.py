@@ -1,6 +1,6 @@
 from lxml import etree
 import urllib2
-from error import WebExError
+from . import error
 from utils import SERVICE_NS
 import logging_glue
 
@@ -20,7 +20,7 @@ class Response(object):
             try:
                 self.raw_response = urllib2.urlopen(self.request.raw_request).read()
             except urllib2.URLError, err:
-                raise WebExError, "Unable to open url: %s  [%s]" % (self.request.url, str(err))
+                raise error.Error("Unable to open url: %s  [%s]" % (self.request.url, str(err)))
         self.parse()
 
     def parse(self):
@@ -46,9 +46,12 @@ class Response(object):
 
         if getattr(self, 'exception_id', None) != None:
             if self.empty_list_ok and self.exception_id==15:
-                return True
-            raise WebExError, "Failure Response from Webex: %s [remote exceptionID: %s]" % (getattr(self,'reason','?'), self.exception_id) 
-        #TODO: implement subError gathering as well!
+                return True # an empty list should not be considered exceptional by default
+            elif self.exception_id==60001:
+                raise error.UnknownEventError(self.exception_id, self.reason)
+            else:
+                raise error.Error(self.exception_id, self.reason)
+        #TODO: implement more variants!
         return self.success
 
         
