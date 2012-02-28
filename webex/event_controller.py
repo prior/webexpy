@@ -136,6 +136,7 @@ class EventController(BaseController):
         if response.success:
             for elem in response.body_content.findall('{%s}matchingRecords'%EVENT_NS):
                 total_count = int(elem.find('{%s}total'%SERVICE_NS).text)
+                batch_count = int(elem.find('{%s}returned'%SERVICE_NS).text)
             for elem in response.body_content.findall("{%s}event"%EVENT_NS):
                 title = elem.find("{%s}sessionName"%EVENT_NS).text
                 starts_at = elem.find("{%s}startDate"%EVENT_NS).text
@@ -146,7 +147,6 @@ class EventController(BaseController):
                 starts_at = sanetztime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
                 event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
-                batch_count +=1
             self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
         return (events, batch_count, total_count)
 
@@ -160,6 +160,7 @@ class EventController(BaseController):
         if response.success:
             for elem in response.body_content.findall('{%s}matchingRecords'%HISTORY_NS):
                 total_count = int(elem.find('{%s}total'%SERVICE_NS).text)
+                batch_count = int(elem.find('{%s}returned'%SERVICE_NS).text)
             for elem in response.body_content.findall("{%s}eventSessionHistory"%HISTORY_NS):
                 title = elem.find("{%s}confName"%HISTORY_NS).text
                 starts_at = elem.find("{%s}sessionStartTime"%HISTORY_NS).text
@@ -169,7 +170,6 @@ class EventController(BaseController):
                 starts_at = sanetztime(starts_at).set_tz(timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
                 event = Event(title, starts_at, duration, None, session_key)
                 events.append(event)
-                batch_count +=1
             self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
         return (events, batch_count, total_count)
 

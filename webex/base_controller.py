@@ -58,7 +58,7 @@ class BaseController(object):
     def query(self, body_content, empty_list_ok=False):
         return Response(Request(self.account, body_content), xml_override=getattr(self,'xml_override',None), empty_list_ok=empty_list_ok)
 
-    # attempts to deal with things moving underneath it by always going back halfway in batches-- effectively querying the entire thing twice over (cuz there's no other way to page through this thing with any certainty)
+    #TODO: should attempt to deal with things moving underneath it since there's no way to page through this thing with any certainty
     def assemble_batches(self, listing_function, **options):
         batch_size = min(options.pop('batch_size', 10), 500) # can't go over 50 with some methods
         start_from = options.pop('start_from',None) or options.pop('startFrom',1)
@@ -69,19 +69,27 @@ class BaseController(object):
 
         items = {}
         batch_number = 1
+        original_offset = offset
+        batch_count = 0
+        item_count = 0
         while True:
-            local_max = max(min(max_ is None and batch_size or (max_-len(items)), batch_size),0)
+            local_max = max(min(max_ is None and batch_size or (max_-item_count), batch_size),0)
             options['list_options_xml'] = LIST_OPTIONS_XML % (offset+1, local_max)
             options['batch_number'] = batch_number
             pre_callback and pre_callback(batch_number)
             new_items,batch_count,total_count = listing_function(**options)
+            item_count += batch_count
             for o in new_items:
-                items[item_id and getattr(o,item_id) or id(o)] = o
-            if batch_count < batch_size or max_ and len(items)>=max_:
-                break;
+                id_ = item_id and getattr(o,item_id) or id(o)
+                if items.get(id_):
+                    items[id_] = items[id_].merge(o)
+                else:
+                    items[id_] = o
+            if batch_count < batch_size or max_ and item_count>=max_:
+                break
             offset += batch_size
             batch_number += 1
-        return items.values()
+        return (items.values(), offset+batch_count-original_offset)
 
     def determine_count(self, listing_function):
         options = {}

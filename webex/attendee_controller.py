@@ -182,6 +182,7 @@ class AttendeeController(BaseController):
         if response.success:
             for elem in response.body_content.findall('{%s}matchingRecords'%ATTENDEE_NS):
                 total_count = int(elem.find('{%s}total'%SERVICE_NS).text)
+                batch_count = int(elem.find('{%s}returned'%SERVICE_NS).text)
             for elem in response.body_content.findall('{%s}attendee'%ATTENDEE_NS):
                 email = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}email'%COMMON_NS).text
                 name_elem = elem.find('{%s}person'%ATTENDEE_NS).find('{%s}name'%COMMON_NS)
@@ -191,7 +192,6 @@ class AttendeeController(BaseController):
                 last_name = name_elem is not None and ' '.join(name_elem.text.split(' ')[1:]) or last_name_elem is not None and last_name_elem.text or None
                 attendee_id = elem.find('{%s}attendeeId'%ATTENDEE_NS).text.strip()
                 attendees.append(Attendee(attendee_id=attendee_id, email=email, first_name=first_name, last_name=last_name))
-                batch_count += 1
             self.debug("listed %s registrants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
         return (attendees, batch_count, total_count)
 
@@ -215,9 +215,9 @@ class AttendeeController(BaseController):
         total_count = 0
         batch_count = 0
         if response.success:
-            attendees_hash = {}
             for elem in response.body_content.findall('{%s}matchingRecords'%HISTORY_NS):
                 total_count = int(elem.find('{%s}total'%SERVICE_NS).text)
+                batch_count = int(elem.find('{%s}returned'%SERVICE_NS).text)
             for elem in response.body_content.findall('{%s}eventAttendeeHistory'%HISTORY_NS):
                 email_elem = elem.find('{%s}attendeeEmail'%HISTORY_NS)
                 if email_elem is None: continue 
@@ -226,14 +226,8 @@ class AttendeeController(BaseController):
                 stopped_at = sanetime(elem.find('{%s}endTime'%HISTORY_NS).text) # looks to be UTC
                 duration = int(elem.find('{%s}duration'%HISTORY_NS).text)
                 ip_address = elem.find('{%s}ipAddress'%HISTORY_NS).text
-                attendees_hash.setdefault(email,[]).append(Attendee(email=email,started_at=started_at,stopped_at=stopped_at,duration=duration,ip_address=ip_address))
-                batch_count += 1
-            # dedupes those attendees that popped on and off the webinar -- merges things down into a single WebExAttendee
-            for key,value in attendees_hash.items():
-                attendee = value[0]
-                for i in range(len(value)-1):
-                    attendee.merge(value[i+1])
-                attendees.append(attendee)
+                attendees.append(Attendee(email=email,started_at=started_at,stopped_at=stopped_at,duration=duration,ip_address=ip_address))
+                #deduping of emails happens in the outer functions
             self.debug("listed %s attendants (batch #%s)" % (len(attendees), options.get('batch_number','?')))
         return (attendees, batch_count, total_count)
 
