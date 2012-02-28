@@ -74,10 +74,10 @@ class BaseController(object):
             options['list_options_xml'] = LIST_OPTIONS_XML % (offset+1, local_max)
             options['batch_number'] = batch_number
             pre_callback and pre_callback(batch_number)
-            new_items = listing_function(**options)[0]
+            new_items,batch_count,total_count = listing_function(**options)
             for o in new_items:
                 items[item_id and getattr(o,item_id) or id(o)] = o
-            if len(new_items) < batch_size or len(items)==max_:
+            if batch_count < batch_size or max_ and len(items)>=max_:
                 break;
             offset += batch_size
             batch_number += 1
@@ -87,7 +87,7 @@ class BaseController(object):
         options = {}
         options['list_options_xml'] = LIST_OPTIONS_XML % (1,1)
         options['batch_number'] = 0
-        return listing_function(**options)[1]
+        return listing_function(**options)[2]
 
 
     @property

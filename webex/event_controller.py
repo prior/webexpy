@@ -131,10 +131,11 @@ class EventController(BaseController):
         self.debug("listing events (batch #%s)" % options.get('batch_number','?'))
         response = self.query(xml, empty_list_ok=True)
         events = []
-        total = 0
+        total_count = 0
+        batch_count = 0
         if response.success:
             for elem in response.body_content.findall('{%s}matchingRecords'%EVENT_NS):
-                total = int(elem.find('{%s}total'%SERVICE_NS).text)
+                total_count = int(elem.find('{%s}total'%SERVICE_NS).text)
             for elem in response.body_content.findall("{%s}event"%EVENT_NS):
                 title = elem.find("{%s}sessionName"%EVENT_NS).text
                 starts_at = elem.find("{%s}startDate"%EVENT_NS).text
@@ -145,29 +146,32 @@ class EventController(BaseController):
                 starts_at = sanetztime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
                 event = Event(title, starts_at, duration, description, session_key)
                 events.append(event)
+                batch_count +=1
             self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
-        return (events, total)
+        return (events, batch_count, total_count)
 
     def _list_historical_batch(self, **options):
         xml = HISTORICAL_LIST_XML % options.get('list_options_xml','')
         self.debug("listing historical events (batch #%s)" % options.get('batch_number','?'))
         response = self.query(xml, empty_list_ok=True)
         events = []
-        total = 0
+        total_count = 0
+        batch_count = 0
         if response.success:
             for elem in response.body_content.findall('{%s}matchingRecords'%HISTORY_NS):
-                total = int(elem.find('{%s}total'%SERVICE_NS).text)
+                total_count = int(elem.find('{%s}total'%SERVICE_NS).text)
             for elem in response.body_content.findall("{%s}eventSessionHistory"%HISTORY_NS):
                 title = elem.find("{%s}confName"%HISTORY_NS).text
                 starts_at = elem.find("{%s}sessionStartTime"%HISTORY_NS).text
                 timezone_id = int(elem.find("{%s}timezone"%HISTORY_NS).text)
                 duration = int(elem.find("{%s}duration"%HISTORY_NS).text)
                 session_key = elem.find("{%s}sessionKey"%HISTORY_NS).text
-                starts_at = sanetztime(starts_at, tz=timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
+                starts_at = sanetztime(starts_at).set_tz(timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[timezone_id])
                 event = Event(title, starts_at, duration, None, session_key)
                 events.append(event)
+                batch_count +=1
             self.debug("listed %s events (batch #%s)" % (len(events), options.get('batch_number','?')))
-        return (events, total)
+        return (events, batch_count, total_count)
 
     def list_(self, **options):
         self.debug("listing events")

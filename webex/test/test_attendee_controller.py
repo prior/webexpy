@@ -9,7 +9,6 @@ from sanetime import sanetime
 import helper
 import logger
 
-
 class AttendeeControllerTest(unittest2.TestCase):
 
     # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
@@ -21,6 +20,7 @@ class AttendeeControllerTest(unittest2.TestCase):
         self.attendee_controller = AttendeeController(self.account, self.event)
 
     def tearDown(self):
+        pass
         self.event_controller.delete(self.event)
 
     @attr('api')
