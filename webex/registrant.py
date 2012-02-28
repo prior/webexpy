@@ -1,4 +1,4 @@
-from . import u
+from . import utils as u
 from sanetime import sanetime
 
 class Registrant(object):
