@@ -39,20 +39,17 @@ class Account(object):
             raise error.InvalidAccount("'%s' is not a valid site_name" % self.site_name)
         self._request_xml = None
 
-    @property
+    @lazy_property
     def request_xml(self):
-        if self._request_xml == None:
-            self._request_xml = REQUEST_XML % self.__dict__
-        return self._request_xml
+        return REQUEST_XML % self.__dict__
 
-    @property
-    def version(self):
-        self.request(VERSION_XML)
+    @lazy_property
+    def version_info(self):
+        return self.request(VERSION_XML, ('ep:apiVersion','ep:release'))
         
-
-    @property
+    @lazy_property
     def verison_info(self):
-        self.
+        self.request
 
     def get_api_version(self):
         xml_in = "\n<bodyContent xsi:type=\"java:com.webex.service.binding.ep.GetAPIVersion\"></bodyContent>"

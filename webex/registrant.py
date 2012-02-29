@@ -96,6 +96,10 @@ class Event(object):
         pass
 
     def attendees(self):
+        self.get_attendees(batch=10)
         pass
+
+
+    def get_attendees(self, **options):
 
 
