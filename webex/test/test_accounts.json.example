@@ -1,0 +1,15 @@
+# To turn this sample json into something you can use with the integration unittests, you need to 
+#   1) remove all the comments
+#   2) replace the fields in the json
+#   3) rename this file to drop the ".sample" suffix
+# and then you should be able to run the integration tests
+
+{ 
+  "default": {
+    "webex_id": "your-account-username",
+    "password": "your-account-password",
+    "site_name": "your-account-sitename" # i.e. the part before the .webex.com
+  }
+  # you can add others for special specific account testing
+}
+

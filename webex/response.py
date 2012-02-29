@@ -1,4 +1,4 @@
-from lxml import etree
+from xml.etree import ElementTree as etree
 import urllib2
 from . import error
 from utils import SERVICE_NS

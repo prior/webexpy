@@ -89,7 +89,6 @@ class BaseController(object):
         options['batch_number'] = 0
         return listing_function(**options)[2]
 
-
     @property
     def password_required(self):
         response = self.query(GET_XML)

@@ -13,6 +13,8 @@ class UtilsTest(unittest2.TestCase):
         self.assertEquals({'a':1, 'b':2, 'c':3},h)
         self.assertEquals(1, u.mpop(h,'x','y','z','a'))
         self.assertEquals({'b':2, 'c':3},h)
+        self.assertEquals('fallback', u.mpop(h,'x','y','z', fallback='fallback'))
+        self.assertEquals(3, u.mpop(h,'x','c','z',fallback='fallback'))
 
     def test_mget(self):
         h = {'a':1, 'b':2, 'c':3}
@@ -20,6 +22,8 @@ class UtilsTest(unittest2.TestCase):
         self.assertEquals({'a':1, 'b':2, 'c':3},h)
         self.assertEquals(1, u.mget(h,'x','y','z','a'))
         self.assertEquals({'a':1, 'b':2, 'c':3},h)
+        self.assertEquals('fallback', u.mget(h,'x','y','z', fallback='fallback'))
+        self.assertEquals(3, u.mget(h,'x','c','z',fallback='fallback'))
 
     def test_lazy_property(self):
         class X(object):
