@@ -7,42 +7,32 @@ from utils import EVENT_NS, SERVICE_NS, HISTORY_NS
 from base_controller import BaseController
 from pprint import pformat
 
-CREATE_XML = """
-<bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">
+EVENT_UPSERT_XML = """
   <accessControl>
     <listing>PUBLIC</listing>
-    %s
+    %(extra_access_control)
   </accessControl>
   <schedule>
-    <startDate>%s</startDate>
-    <duration>%s</duration>
-    <timeZoneID>%s</timeZoneID>
+    <startDate>%(start_date)s</startDate>
+    <duration>%(duration)s</duration>
+    <timeZoneID>%(time_zone_id)s</timeZoneID>
   </schedule>
   <metaData>
-    <sessionName>%s</sessionName>
-    <description>%s</description>
+    <sessionName>%(session_name)s</sessionName>
+    <description>%(description)s</description>
   </metaData>
-</bodyContent>
 """
+EVENT_CREATE_XML = '<bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">%s</bodyContent>' % EVENT_UPSERT_XML
+EVENT_UPDATE_XML = '<bodyContent xsi:type="java:com.webex.service.binding.event.SetEvent">%s</bodyContent>' % EVENT_UPSERT_XML
 
-UPDATE_XML = """
-<bodyContent xsi:type="java:com.webex.service.binding.event.SetEvent">
-  <accessControl>
-    <listing>PUBLIC</listing>
-    %s
-  </accessControl>
-  <event:sessionKey>%s</event:sessionKey>
-  <schedule>
-    <startDate>%s</startDate>
-    <duration>%s</duration>
-    <timeZoneID>%s</timeZoneID>
-  </schedule>
-  <metaData>
-    <sessionName>%s</sessionName>
-    <description>%s</description>
-  </metaData>
-</bodyContent>
-"""
+class Action
+    def __init__
+
+    def build_request
+    def execute
+
+
+
 
 DELETE_XML = """
 <bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent">

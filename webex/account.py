@@ -1,5 +1,4 @@
 import re
-from decimal import Decimal
 import requests
 from . import utils as u
 from .utils import lazy_property
@@ -98,10 +97,22 @@ class Account(Base):
 
     @lazy_property
     def events(self):
+        return Event.all()
         return u.traverse()
 
     @lazy_property
     def normal_events(self):
+        return Event.all_l
         return u.traverse()
+
+    def historical_events(self):
+        return Event.all_historical()
+
+    def query_events(self):
+
+    def create_event(self, event):
+        :b2
+
+
 
 
