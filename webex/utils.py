@@ -67,8 +67,8 @@ def nfind(elem, *args):
     try:
         elem = find(elem, *args)
     except error.ParseError:
-        elem = None
-    return elem is not None and elem or None
+        return None
+    return elem
 
 def nfind_str(elem, *args):
     elem = nfind(elem, *args)

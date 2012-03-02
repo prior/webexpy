@@ -1,4 +1,5 @@
 import re
+import sys
 import requests
 from requests import async
 from .utils import find, nfind, nfind_str, nfind_int, find_all, mpop, mget, lazy_property, reraise
@@ -9,24 +10,99 @@ from sanetime import sanetime
 
 #TODO: allow async requests through requests-- would have to break out each api calling property into its own class that could build a request and also produce a response and do a similar thing to what requests does with async.map, just implement a level up inside of here on top of async.map
 
-REQUEST_XML = """
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<serv:message xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
-  <header>
-    <securityContext>
-      <webExID>%(username)s</webExID>
-      <password>%(password)s</password>
-      <siteName>%(site_name)s</siteName>
-    </securityContext>
-  </header>
-  <body>
-%%(body)s
-  </body>
-</serv:message>
-"""
+def print_response(resp):
+    print "RESPONSE \/"
+    print resp
+    print "RESPONSE ^"
+
+def print_pre_request(req):
+    print "PRE REQUEST \/"
+    print req
+    print "PRE REQUEST ^"
+
+def print_post_request(req):
+    print "POST REQUEST \/"
+    print req
+    print "POST REQUEST ^"
+
 
 VERSION_XML = '<bodyContent xsi:type=\"java:com.webex.service.binding.ep.GetAPIVersion\"></bodyContent>'
 SITE_INSTANCE_XML = '<bodyContent xsi:type="java:com.webex.service.binding.site.GetSite" />'
+
+REQUEST_XML = """
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<serv:message xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
+<header>
+    <securityContext>
+    <webExID>%(username)s</webExID>
+    <password>%(password)s</password>
+    <siteName>%(site_name)s</siteName>
+    </securityContext>
+</header>
+<body>
+%%(body)s
+</body>
+</serv:message>
+"""
+
+#class Exchange(object):
+    #REQUEST_XML = """
+    #<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    #<serv:message xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
+    #<header>
+        #<securityContext>
+        #<webExID>%(username)s</webExID>
+        #<password>%(password)s</password>
+        #<siteName>%(site_name)s</siteName>
+        #</securityContext>
+    #</header>
+    #<body>
+    #%%(body)s
+    #</body>
+    #</serv:message>
+    #"""
+
+    #def __init__(self, account, *args, **kwargs):
+        #self.account = account
+
+    #def xml_body
+
+    #def post_response
+        
+
+
+    #@property
+    #def request:  # gets async request for async jobs -- need to generate a fresh one each time!
+        #return _generate_request(True)
+
+    #def execute():
+        #return _generate_request(False)
+
+    #def _generate_request(async=False):
+        #obj = async and requests.async or requests
+        #obj.post(
+
+    #def _base_response_action(xml):
+
+    #def _response_action(body_content_etree):
+
+
+
+
+
+
+    
+
+    #def result
+
+
+
+##class GetSite(Exchange):
+    ##XML = 
+    
+
+
+
 
 class Account(Base):
     def __init__(self, **kwargs):
@@ -51,10 +127,20 @@ class Account(Base):
 #            result = requests.post(self.api_url, self.request_xml_template % {'body':xml_body}, **options)
 
             rs = []
-            for i in xrange(10):
-                rs.append(async.post(self.api_url, self.request_xml_template % {'body':xml_body}, **options))
+#            config= {'verbose': sys.stderr}
+            config = {}
+            for i in xrange(5):
+                if i==4: options['timeout']=0.001
+                rs.append(async.post(self.api_url, self.request_xml_template % {'body':xml_body}, config=config, hooks=dict(response=print_response, pre_request=print_pre_request, post_request=print_post_request), **options))
             print(repr(sanetime()))
-            results = async.map(rs,size=1)
+            results = async.map(rs,size=5)
+            raise StandardError("hello")
+            for i in xrange(5):
+#                print results[i]
+                print "ERROR"
+                print results[i].error
+                print "RAISE_FOR_STATUS"
+                print results[i].raise_for_status()
             print(repr(sanetime()))
             print len(results)
             result = results[-1]
