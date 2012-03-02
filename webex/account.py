@@ -1,10 +1,11 @@
 import re
 import requests
-from . import utils as u
-from .utils import lazy_property
+from requests import async
+from .utils import find, nfind, nfind_str, nfind_int, find_all, mpop, mget, lazy_property, reraise
 from . import error
 from .base import Base
 from lxml import etree
+from sanetime import sanetime
 
 #TODO: allow async requests through requests-- would have to break out each api calling property into its own class that could build a request and also produce a response and do a similar thing to what requests does with async.map, just implement a level up inside of here on top of async.map
 
@@ -30,9 +31,9 @@ SITE_INSTANCE_XML = '<bodyContent xsi:type="java:com.webex.service.binding.site.
 class Account(Base):
     def __init__(self, **kwargs):
         super(Account, self).__init__()
-        self.username = u.nstrip(u.mpop(kwargs, 'webex_id', 'webexId', 'webExID', 'username'))
-        self.password = u.nstrip(u.mpop(kwargs, 'password'))
-        self.site_name = u.nstrip(u.mpop(kwargs, 'site_name', 'siteName', fallback='').split('.')[0].split('/')[-1]) or None
+        self.username = mpop(kwargs, 'webex_id', 'webexId', 'webExID', 'username')
+        self.password = mpop(kwargs, 'password')
+        self.site_name = mpop(kwargs, 'site_name', 'siteName', fallback='').split('.')[0].split('/')[-1].strip() or None
 
         if not self.username:
             raise error.InvalidAccount("No webex_id/username specified!")
@@ -47,37 +48,43 @@ class Account(Base):
     def request_etree(self, xml_body, **options):
         options.setdefault('timeout',10)
         try:
-            result = requests.post(self.api_url, self.request_xml_template % {'body':xml_body}, **options)
-        except requests.exception.Timeout:
+#            result = requests.post(self.api_url, self.request_xml_template % {'body':xml_body}, **options)
+
+            rs = []
+            for i in xrange(10):
+                rs.append(async.post(self.api_url, self.request_xml_template % {'body':xml_body}, **options))
+            print(repr(sanetime()))
+            results = async.map(rs,size=1)
+            print(repr(sanetime()))
+            print len(results)
+            result = results[-1]
+        except requests.exceptions.Timeout:
             self._reraise(error.TimeoutError(options['timeout']))
-        except requests.exception.RequestException:
+        except requests.exceptions.RequestException:
             self._reraise(error.RequestError())
         if result.status_code != 200:
             raise error.ServerError(result)
         try:
             root = etree.fromstring(result.content)
         except:
-            u.reraise(error.ParseError(result.content))
+            reraise(error.ParseError(result.content))
 
-        response = u.traverse(root, 'serv:header', 'serv:response')
-        success = u.traverse(response, 'serv:result').text == "SUCCESS"
-        gsb_status = u.ntraverse_text(response, 'serv:gsbStatus')
-        exception_id = u.nint(u.ntraverse_text(response, 'serv:exceptionID'))
-        reason = u.ntraverse_text(response, 'serv:reason')
-        value = u.ntraverse_text(response, 'serv:value')
+        response = find(root, 'serv:header', 'serv:response')
+        success = find(response, 'serv:result').text.lower() == "success"
+        gsb_status = nfind_str(response, 'serv:gsbStatus')
+        exception_id = nfind_int(response, 'serv:exceptionID')
+        reason = nfind_str(response, 'serv:reason')
+        value = nfind_str(response, 'serv:value')
         if exception_id: raise error.ApiError(success, exception_id, reason, value, gsb_status)
-        return u.traverse(root, 'serv:body', 'serv:bodyContent')
+        return find(root, 'serv:body', 'serv:bodyContent')
 
     @lazy_property
     def version_info(self):
         body = self.request_etree(VERSION_XML)
-        return (u.ntraverse_text(body, 'ep:apiVersion'), u.ntraverse_text(body, 'ep:release'))
+        return (nfind_str(body, 'ep:apiVersion'), nfind_str(body, 'ep:release'))
 
     @property
     def version(self):
-        print self.version_info[0].split(' ')[-1]
-        print self.version_info[0].split(' ')[-1].split('V')[-1]
-        print self.version_info[0].split(' ')[-1].split('V')[-1].split('.')[:2]
         float('.'.join(self.version_info[0].split(' ')[-1].split('V')[-1].split('.')[:2]))
 
     @property
@@ -86,32 +93,32 @@ class Account(Base):
 
     @property
     def meetings_require_password(self):
-        return u.traverse(self.site_instance, 'site:securityOptions', 'site:allMeetingsPassword').text.lower() == 'true'
+        return find(self.site_instance, 'site:securityOptions', 'site:allMeetingsPassword').text.lower() == 'true'
 
     @property
     def _account(self): return self
 
     @lazy_property
     def site_instance(self):
-        return u.traverse(self.request_etree(SITE_INSTANCE_XML),'site:siteInstance')
+        return find(self.request_etree(SITE_INSTANCE_XML),'site:siteInstance')
 
-    @lazy_property
-    def events(self):
-        return Event.all()
-        return u.traverse()
+    #@lazy_property
+    #def events(self):
+        #return Event.get_all()
+        #return u.traverse()
 
-    @lazy_property
-    def normal_events(self):
-        return Event.all_l
-        return u.traverse()
+    #@lazy_property
+    #def normal_events(self):
+        #return Event.all_l
+        #return u.traverse()
 
-    def historical_events(self):
-        return Event.all_historical()
+    #def historical_events(self):
+        #return Event.all_historical()
 
-    def query_events(self):
+    #def query_events(self):
 
-    def create_event(self, event):
-        :b2
+    #def create_event(self, event):
+        #:b2
 
 
 

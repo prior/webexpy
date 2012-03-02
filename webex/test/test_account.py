@@ -17,10 +17,10 @@ class AccountTest(unittest2.TestCase):
         with self.assertRaises(e.InvalidAccount): Account(username='test', site_name='test')
         with self.assertRaises(e.InvalidAccount): Account(password='test', site_name='test')
 
-    def test_version_info(self):
-        self.assertEquals(('WebEx XML API V5.9.0','SP1'), th.account.version_info)
-        self.assertEquals(5.9, th.account.version)
-        self.assertEquals(5, th.account.major_version)
+    #def test_version_info(self):
+        #self.assertEquals(('WebEx XML API V5.9.0','SP1'), th.account.version_info)
+        #self.assertEquals(5.9, th.account.version)
+        #self.assertEquals(5, th.account.major_version)
 
     def test_meetings_require_password(self):
         self.assertTrue(th.account.meetings_require_password)
