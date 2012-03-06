@@ -1,6 +1,12 @@
 # tested with python 2.6
 lxml==2.3.1
 nose==1.1.2
+rudolf==0.3
 unittest2==0.5.1
--e git://github.com/prior/sanetime.git@v3.0.3#egg=sanetime-3.0.3
-#-e ../sanetime
+requests==0.10.6
+#gevent==0.13.6
+cython
+https://bitbucket.org/denis/gevent/get/745149cd866d.tar.gz
+#-e git://github.com/prior/sanetime.git@v3.0.3#egg=sanetime-3.0.3
+-e ../sanetime
+

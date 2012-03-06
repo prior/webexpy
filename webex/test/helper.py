@@ -20,9 +20,9 @@ class TestHelper(object):
 
     @lazy_property
     def account(self):
-        return self.get_account('default')
+        return self['default']
 
-    def get_account(self, key):
+    def __getitem__(self, key):
         try:
             return Account(**self._accounts_dict[key])
         except KeyError:

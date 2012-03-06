@@ -73,7 +73,7 @@ def nfind(elem, *args):
 def nfind_str(elem, *args):
     elem = nfind(elem, *args)
     if elem is None: return None
-    return elem.text.strip
+    return elem.text.strip()
 
 def nfind_lstr(elem, *args):
     s = nfind_str(elem, *args)
@@ -87,20 +87,19 @@ def nfind_int(elem, *args):
 
 def find_all(elem, *args):
     elem = find(elem, *args[0:-1])
-    return elem.find_all(_namespaced_tag(args[-1]))
+    return elem.findall(_namespaced_tag(args[-1]))
 
 def reraise(err):
     raise err, None, sys.exc_info()[2]
 
 
-#def grab(root, *args, **kwargs):
-    #ns = kwargs.pop('ns',None)
-    #values = {}
-    #attrs_labels = dict((a,ns and len(a.split(':'))==1 and '%s:%s'%(ns,a) or a) for a in args)
-    #return dict((k, (ntraverse_text(root,v))) for k,v in attrs_labels)
+def grab(root, *args, **kwargs):
+#    import pdb; pdb.set_trace()
+    ns = kwargs.pop('ns',None)
+    attrs_labels = dict((a,ns and len(a.split(':'))==1 and '%s:%s'%(ns,a) or a) for a in args)
+    return dict((k, (nfind_str(root,v))) for k,v in attrs_labels.iteritems())
 
 
-        #u.grab('sessionName','startDate','timeZoneID','duration','description','sessionKey', ns='event')
 
         
         #u.traverse(elem.

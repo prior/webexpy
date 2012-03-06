@@ -1,27 +1,32 @@
 class Error(ValueError): pass
-class TimeoutError(Error): 
-    def __init__(self, timeout):
 
-    timeout_valuepass
-
-
+class PagingSlippageError(Error): pass
 
 class InvalidAccount(Error): pass
 
-class ApiError(Error):
-    def __init__(self, exception_id, reason):
+class RequestError(Error):
+    def __init__(self, request, err_str=None):
+        super(RequestError, self).__init__(err_str or 'Request Error')
+        self.request = request
+
+class TimeoutError(RequestError): 
+    def __init__(self, request, err_str=None):
+        super(TimeoutError, self).__init__(request, err_str or 'Timeout Error: Exceeded %ss timeout'%(request.timeout or '?'))
+        self.request = request
+
+class ResponseError(RequestError):
+    def __init__(self, response, err_str=None):
+        super(ResponseError, self).__init__(response.request, err_str or 'Response Error')
+        self.response = response
+
+class ApiError(ResponseError):
+    def __init__(self, exception_id, reason, response, err_str=None):
+        super(ApiError, self).__init__(response, err_str or 'Api Error: %s'%(self.reason))
         self.exception_id = exception_id
         self.reason = reason
-class UnknownEventError(ApiError): pass
 
-        except requests.exceptions.Timeout:
-            self._reraise(error.TimeoutError(options['timeout']))
-        except requests.exceptions.RequestException:
-            self._reraise(error.RequestError())
-        if result.status_code != 200:
-            raise error.ServerError(result)
-        try:
-            root = etree.fromstring(result.content)
-        except:
-            reraise(error.ParseError(result.content))
- 
+class ParseError(ResponseError):
+    def __init__(self, response, err_str=None):
+        super(ParseError, self).__init__(response, err_str or 'Parse Error')
+
+
