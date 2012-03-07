@@ -5,6 +5,10 @@ from .utils import find, nfind_str, nfind_int, reraise, lazy_property, grab
 from . import error
 from lxml import etree
 
+def batch_action(self, exchange_klass, items):
+    exchanges = [exchange_klass(self, item) for item in items]
+    return [e.process_response(r) for e,r in zip(exchanges, requests.async.map([e.request for e in exchanges]))]
+
 # This class is the way it is to allow for synchronous and asynchronous calling possibilities (though after building things this way, it appears that webex allows zero-to-none concurrency on a single account domain-- fuck)
 class Exchange(object):
     def __init__(self, account, request_opts=None, **opts):
@@ -54,22 +58,22 @@ class Exchange(object):
     
     @lazy_property
     def request(self):
-        #return self._request(True)
-        return requests.async.post(self.account.api_url, self.account.request_xml_template % {'body':self._input()}, **self.request_opts)
+        return self._request(True)
+#        return requests.async.post(self.account.api_url, self.account.request_xml_template % {'body':self._input()}, **self.request_opts)
 
     @lazy_property
     def response(self):
-        #return self._request(False)
-        return requests.post(self.account.api_url, self.account.request_xml_template % {'body':self._input()}, **self.request_opts)
+        return self._request(False)
+#        return requests.post(self.account.api_url, self.account.request_xml_template % {'body':self._input()}, **self.request_opts)
 
     def _request(self, async):
         obj = async and requests.async or requests
-        return obj.post(self.account.api_url, self.account.request_xml_template % {'body':self._input()}, **self.request_opts)
+        xml = self.account.request_xml_template % {'body':self._input()}
+        return obj.post(self.account.api_url, xml, **self.request_opts)
 
     @lazy_property
     def answer(self):
         return self.process_response()
-
 
 
 class GetListExchange(Exchange):
@@ -110,7 +114,6 @@ class GetListExchange(Exchange):
 
     def _list_answer(self, body_content):
         raise NotImplementedError("this needs to be implemented in a derived class")
-
 
 
 class BatchListExchange(object):

@@ -1,6 +1,5 @@
 import unittest2
-import requests.async
-from ..event import GetListedEvents,GetHistoricalEvents,Event,CreateEvent
+from ..event import GetListedEvents,GetHistoricalEvents,Event
 from .helper import TestHelper
 from ..exchange import BatchListExchange
 
@@ -13,20 +12,51 @@ class EventTest(unittest2.TestCase):
 
     def tearDown(self): pass
 
-    def test_create_event(self):
-        current_session_keys = [e.session_key for e in self.account.listed_events]; del self.account._listed_batch_list
-        expected_events = [Event.random(self.account) for i in xrange(10)]
-        cloned_events = [e.clone() for e in expected_events]
-        exchanges = [CreateEvent(th.account, e) for e in cloned_events]
-        for e,r,x in zip(exchanges, requests.async.map([e.request for e in exchanges]), expected_events):
-            x.session_key = e.process_response(r).session_key
-        self.assertEquals(expected_events, [e.answer for e in exchanges])
-        expected_hash = dict((e.session_key,e) for e in expected_events)
-        actual_hash = dict((e.session_key,e) for e in self.account.listed_events)
-        for sk in current_session_keys:
-            del actual_hash[sk]
-        self.assertEquals(expected_hash, actual_hash)
+    def test_single_crud(self):
+        events = dict((e.session_key,e) for e in self.account.get_listed_events(True))
 
+        new_event = Event.random(self.account).create()
+        events_after_create = dict((e.session_key,e) for e in self.account.get_listed_events(True))
+        self.assertNotIn(new_event.session_key, events)
+        self.assertIn(new_event.session_key, events_after_create)
+        self.assertEquals(new_event, events_after_create[new_event.session_key])
+
+        updated_event = new_event.clone().merge(Event.random(self.account))
+        self.assertNotEquals(new_event, updated_event)
+        updated_event.update()
+        events_after_update = dict((e.session_key,e) for e in self.account.get_listed_events(True))
+        self.assertNotIn(updated_event.session_key, events)
+        self.assertIn(updated_event.session_key, events_after_create)
+        self.assertNotEquals(updated_event, events_after_create[updated_event.session_key])
+        self.assertIn(updated_event.session_key, events_after_update)
+        self.assertEquals(updated_event, events_after_update[updated_event.session_key])
+
+        deleted_event = updated_event.delete()
+        events_after_delete = dict((e.session_key,e) for e in self.account.get_listed_events(True))
+        self.assertIn(deleted_event.session_key, events_after_update)
+        self.assertNotIn(deleted_event.session_key, events_after_delete)
+
+    def test_batch_crud(self):
+        events = dict((e.session_key,e) for e in self.account.get_listed_events(True))
+        new_events = Event.random(self.account, 10)
+        new_events = dict((e.session_key,e) for e in self.account.create_events(new_events))
+        events_after_create = dict((e.session_key,e) for e in self.account.get_listed_events(True))
+        self.assertEquals({}, dict((sk, events[sk]) for sk in set(events) & set(new_events)))
+        self.assertEquals(new_events, dict((sk, events_after_create[sk]) for sk in (set(events_after_create) & set(new_events))))
+
+        updated_events = dict((e.session_key, e.clone().merge(Event.random(self.account))) for e in new_events.values())
+        self.assertNotEquals(new_events, updated_events)
+        updated_events = dict((e.session_key,e) for e in self.account.update_events(updated_events.values()))
+        events_after_update = dict((e.session_key,e) for e in self.account.get_listed_events(True))
+        self.assertEquals({}, dict((sk, events[sk]) for sk in set(events) & set(updated_events)))
+        self.assertNotEquals(updated_events, dict((sk, events_after_create[sk]) for sk in set(events_after_create) & set(updated_events)))
+        self.assertEquals(updated_events, dict((sk, events_after_update[sk]) for sk in set(events_after_update) & set(updated_events)))
+
+        deleted_events = dict((e.session_key, e) for e in self.account.delete_events(updated_events.values()))
+        events_after_delete = dict((e.session_key,e) for e in self.account.get_listed_events(True))
+        self.assertEquals(deleted_events, dict((sk, events_after_update[sk]) for sk in set(events_after_update) & set(deleted_events)))
+        self.assertEquals({}, dict((sk, events_after_delete[sk]) for sk in set(events_after_delete) & set(deleted_events)))
+        
     def test_listed_events(self):
         count = GetListedEvents(self.account, 1, 0).answer[1]
         events = self.account.listed_events

@@ -3,6 +3,8 @@ from .utils import find, nfind_str, mpop, lazy_property
 from . import error
 from .exchange import Exchange, BatchListExchange, ParallelBatchListExchange
 from .event import GetListedEvents, GetHistoricalEvents
+from . import event
+from . import exchange
 
 
 REQUEST_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -57,16 +59,37 @@ class Account(object):
         return GetSite(self).answer
 
     @property
-    def listed_events(self):
-        return self._listed_batch_list.items
+    def listed_events(self): return self.get_listed_events()
 
     @property
-    def historical_events(self):
-        return self._historical_batch_list.items
+    def historical_events(self): return self.get_historical_events()
 
     @lazy_property
-    def events(self):
+    def events(self): return self.get_events()
+
+    def get_listed_events(self, bust=False):
+        if bust: del self._listed_batch_list
+        return self._listed_batch_list.items
+
+    def get_historical_events(self, bust=False):
+        if bust: del self._historical_batch_list
+        return self._historical_batch_list.items
+
+    def get_events(self, bust=False):
+        if bust: 
+            del self.events
+            del self._listed_batch_list
+            del self._historical_batch_list
         return ParallelBatchListExchange([self._listed_batch_list, self._historical_batch_list], 'starts_at').items
+
+    def create_events(self, events):
+        return exchange.batch_actions(self, event.CreateEvent, events)
+
+    def update_events(self, events):
+        return exchange.batch_actions(self, event.UpdateEvent, events)
+
+    def delete_events(self, events):
+        return exchange.batch_actions(self, event.DeleteEvent, events)
 
     @lazy_property
     def _listed_batch_list(self):
@@ -75,6 +98,8 @@ class Account(object):
     @lazy_property
     def _historical_batch_list(self):
         return BatchListExchange(self, GetHistoricalEvents, 'session_key', batch_size=50, overlap=2)
+
+
 
 
 class GetVersion(Exchange):
