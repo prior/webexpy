@@ -1,4 +1,3 @@
-import sys
 import requests
 import requests.async
 from .utils import find, nfind_str, nfind_int, reraise, lazy_property, grab
@@ -14,7 +13,7 @@ class Exchange(object):
     def __init__(self, account, request_opts=None, **opts):
         super(Exchange, self).__init__()
         self.account = account
-        self.request_opts = {'timeout':10, 'config':dict(verbose=sys.stderr)}
+        self.request_opts = {'timeout':10}
         self.request_opts.update(request_opts or {})
         self.opts = opts
 #        self.opts['debug']=True
@@ -30,7 +29,7 @@ class Exchange(object):
             reraise(error.TimeoutError(self.request))
         except requests.exceptions.RequestException:
             if response is None or response.status_code==0:
-                reraise(error.RequestError(self.request, str(response.error)))
+                reraise(error.RequestError(self.request, str(response and response.error or 'unkown error')))
             else:
                 reraise(error.ResponseError(response))
         if response.status_code != 200:
@@ -46,7 +45,12 @@ class Exchange(object):
         exception_id = nfind_int(resp, 'serv:exceptionID')
         reason = nfind_str(resp, 'serv:reason')
         value = nfind_str(resp, 'serv:value')
-        if exception_id: raise error.ApiError(response, success, exception_id, reason, value, gsb_status)
+        if not success: 
+            if exception_id==30001:
+                raise error.InvalidUsernameError(response, success, exception_id, reason, value, gsb_status)
+            elif exception_id==30002:
+                raise error.InvalidPasswordError(response, success, exception_id, reason, value, gsb_status)
+            raise error.ApiError(response, success, exception_id, reason, value, gsb_status)
         self._lazy_answer = self._answer(find(root, 'serv:body', 'serv:bodyContent'))
         return self._lazy_answer
 
@@ -59,12 +63,10 @@ class Exchange(object):
     @lazy_property
     def request(self):
         return self._request(True)
-#        return requests.async.post(self.account.api_url, self.account.request_xml_template % {'body':self._input()}, **self.request_opts)
 
     @lazy_property
     def response(self):
         return self._request(False)
-#        return requests.post(self.account.api_url, self.account.request_xml_template % {'body':self._input()}, **self.request_opts)
 
     def _request(self, async):
         obj = async and requests.async or requests
@@ -198,26 +200,7 @@ class ParallelBatchListExchange(object):
                     items_hash[getattr(item, self.key)].merge(item)
                 else:
                     items_hash[getattr(item, self.key)] = item
-        return sorted(items_hash.values(), key=lambda item: getattr(item,self.sorted_key))
+        items = items_hash.values()
+        items.sort()
+        return items
 
-
-
-    #@lazy_property
-    #def items(self):
-        #items, total = self.list_exchange_klass(self.account, self.overlap or 1, 0).answer
-        #key_set = set([getattr(obj,self.key) for obj in items])
-        #batch_count = (total-self.batch_size-1) / self.effective_batch_size + 2
-        #exchanges = [self.list_exchange_klass(self.account, self.batch_size, i*self.effective_batch_size) for i in xrange(batch_count)]
-        #if self.async:
-            #responses = requests.async.map([e.request for e in exchanges])
-            #for e,r in zip(exchanges, responses): e.process_response(r) 
-        #for extra_items, total in [e.answer for e in exchanges]:
-            #if self.overlap and not extra_items:
-                #raise error.PagingSlippageError("Lost too many events during paging to be certain of the final result set.  You will need to try again.")
-            #if self.overlap and getattr(extra_items[0], self.key) not in key_set:
-                #raise error.PagingSlippageError("Too much movement in event list during paging to be certain of the final result set.  You will need to try again.")
-            #for obj in extra_items:
-                #if getattr(obj, self.key) not in key_set:
-                    #items.append(obj)
-            #key_set |= set(map(lambda obj: getattr(obj, self.key), extra_items))
-        #return items

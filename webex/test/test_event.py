@@ -3,14 +3,41 @@ from ..event import GetListedEvents,GetHistoricalEvents,Event
 from .helper import TestHelper
 from ..exchange import BatchListExchange
 
-th = TestHelper()
-
 class EventTest(unittest2.TestCase):
 
     def setUp(self): 
-        self.account = th.account
+        self.th = TestHelper()
+        self.account = self.th.account
 
     def tearDown(self): pass
+
+    def test_equality(self):
+        event1 = Event.random(self.account)
+
+        self.assertEquals(event1, event1)
+        self.assertTrue(event1 == event1)
+        self.assertFalse(event1 != event1)
+        self.assertFalse(event1 < event1)
+        self.assertFalse(event1 > event1)
+        self.assertTrue(event1 >= event1)
+        self.assertTrue(event1 <= event1)
+
+        event2 = Event.random(self.account)
+        event2.starts_at = event1.starts_at + 60*10**6
+        self.assertNotEquals(event1, event2)
+        self.assertFalse(event1 == event2)
+        self.assertTrue(event1 != event2)
+        self.assertTrue(event1 < event2)
+        self.assertFalse(event1 > event2)
+        self.assertFalse(event1 >= event2)
+        self.assertTrue(event1 <= event2)
+
+    def test_clone(self):
+        event = Event.random(self.account)
+        clone = event.clone()
+        extra = Event.random(self.account)
+        self.assertEquals(event, clone)
+        self.assertNotEquals(event,extra)
 
     def test_single_crud(self):
         events = dict((e.session_key,e) for e in self.account.get_listed_events(True))
@@ -21,7 +48,7 @@ class EventTest(unittest2.TestCase):
         self.assertIn(new_event.session_key, events_after_create)
         self.assertEquals(new_event, events_after_create[new_event.session_key])
 
-        updated_event = new_event.clone().merge(Event.random(self.account))
+        updated_event = Event.random(self.account).merge(new_event)
         self.assertNotEquals(new_event, updated_event)
         updated_event.update()
         events_after_update = dict((e.session_key,e) for e in self.account.get_listed_events(True))
@@ -44,7 +71,7 @@ class EventTest(unittest2.TestCase):
         self.assertEquals({}, dict((sk, events[sk]) for sk in set(events) & set(new_events)))
         self.assertEquals(new_events, dict((sk, events_after_create[sk]) for sk in (set(events_after_create) & set(new_events))))
 
-        updated_events = dict((e.session_key, e.clone().merge(Event.random(self.account))) for e in new_events.values())
+        updated_events = dict((e.session_key, Event.random(self.account).merge(e)) for e in new_events.values())
         self.assertNotEquals(new_events, updated_events)
         updated_events = dict((e.session_key,e) for e in self.account.update_events(updated_events.values()))
         events_after_update = dict((e.session_key,e) for e in self.account.get_listed_events(True))
@@ -73,19 +100,16 @@ class EventTest(unittest2.TestCase):
         listed_keys = set(e.session_key for e in self.account.listed_events)
         historical_keys = set(e.session_key for e in self.account.historical_events)
         self.assertEquals(keys, listed_keys | historical_keys)
-        from pprint import pprint; pprint(events)
 
     @unittest2.skip('sanity checks we don\'t need to run every time')
     def test_sync_listed_events(self):
-        events = th.account.listed_events
-        sync_events = BatchListExchange(th.account, GetListedEvents, 'session_key', batch_size=2, overlap=1, async=False).items
+        events = self.account.listed_events
+        sync_events = BatchListExchange(self.account, GetListedEvents, 'session_key', batch_size=2, overlap=1, async=False).items
         self.assertEquals(events, sync_events)
 
     @unittest2.skip('sanity checks we don\'t need to run every time')
     def test_sync_historical_events(self):
-        events = th.account.historical_events
-        sync_events = BatchListExchange(th.account, GetHistoricalEvents, 'session_key', batch_size=2, overlap=1, async=False).items
+        events = self.account.historical_events
+        sync_events = BatchListExchange(self.account, GetHistoricalEvents, 'session_key', batch_size=2, overlap=1, async=False).items
         self.assertEquals(events, sync_events)
-
-
 

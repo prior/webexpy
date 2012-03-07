@@ -6,6 +6,39 @@ from event import Event
 from utils import EVENT_NS, SERVICE_NS, HISTORY_NS
 from base_controller import BaseController
 from pprint import pformat
+CREATE_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">
+  <schedule>
+    <startDate>%s</startDate>
+    <duration>%s</duration>
+    <timeZoneID>%s</timeZoneID>
+  </schedule>
+  <metaData>
+    <sessionName>%s</sessionName>
+    <description>%s</description>
+  </metaData>
+</bodyContent>
+"""
+
+UPDATE_XML = """
+<bodyContent xsi:type="java:com.webex.service.binding.event.SetEvent">
+  <accessControl>
+    <listing>PUBLIC</listing>
+    %s
+  </accessControl>
+  <event:sessionKey>%s</event:sessionKey>
+  <schedule>
+    <startDate>%s</startDate>
+    <duration>%s</duration>
+    <timeZoneID>%s</timeZoneID>
+  </schedule>
+  <metaData>
+    <sessionName>%s</sessionName>
+    <description>%s</description>
+  </metaData>
+</bodyContent>
+"""
+
 
 EVENT_UPSERT_XML = """
   <accessControl>

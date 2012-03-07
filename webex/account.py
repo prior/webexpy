@@ -38,6 +38,9 @@ class Account(object):
         self.api_url = 'https://%s.webex.com/WBXService/XMLService' % self.site_name
         self.request_xml_template = REQUEST_XML % self.__dict__
 
+    def clone(self):
+        return Account(*self.__dict__)
+
     @lazy_property
     def version_info(self):
         return GetVersion(self).answer
@@ -83,13 +86,13 @@ class Account(object):
         return ParallelBatchListExchange([self._listed_batch_list, self._historical_batch_list], 'starts_at').items
 
     def create_events(self, events):
-        return exchange.batch_actions(self, event.CreateEvent, events)
+        return exchange.batch_action(self, event.CreateEvent, events)
 
     def update_events(self, events):
-        return exchange.batch_actions(self, event.UpdateEvent, events)
+        return exchange.batch_action(self, event.UpdateEvent, events)
 
     def delete_events(self, events):
-        return exchange.batch_actions(self, event.DeleteEvent, events)
+        return exchange.batch_action(self, event.DeleteEvent, events)
 
     @lazy_property
     def _listed_batch_list(self):

@@ -31,6 +31,9 @@ class ApiError(ResponseError):
     def __str__(self):
         return "%s: %s [success=%s, gsb_status=%s, value=%s]\n%s" % (self.exception_id, self.reason, self.success, self.gsb_status, self.value, self.request.data)
 
+class InvalidUsernameError(ApiError): pass
+class InvalidPasswordError(ApiError): pass
+
 class ParseError(ResponseError):
     def __init__(self, response, err_str=None):
         super(ParseError, self).__init__(response, str(response.content))
