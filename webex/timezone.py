@@ -22,7 +22,7 @@ TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label(s)
     (18, 'GMT-02:00, Mid-Atlantic (Mid-Atlantic)', 'America/Noronha'), # GMT-02:00 Mid-Atlantic best guess
     (19, 'GMT-01:00, Azores (Azores)', 'Atlantic/Azores'),
     (20, 'GMT+00:00, Greenwich (Casablanca)', 'Africa/Casablanca'),
-    (21, 'GMT+00:00, GMT (London)', 'Europe/London'),
+    (21, 'GMT+00:00, GMT (London)', 'Europe/London', 'UTC'),
     (22, 'GMT+01:00, Europe (Amsterdam)', 'Europe/Amsterdam'),
     (23, 'GMT+01:00, Europe (Berlin)', 'Europe/Paris'),
     (24, None),
@@ -82,11 +82,11 @@ def get_id(timezone_label):
     if timezone_label in PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP:
         return PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label]
 
-    us = 1000**2*60**2*24*365*30
+    us = sanetime().us
     dt = sanetime(us).to_naive_datetime()
     st = sanetime(dt, tz=timezone_label)
-    for webex_timezone_id, webex_label, pytz_label in TIMEZONE_DATA:
-        if pytz_label is not None:
+    for tuple_ in TIMEZONE_DATA:
+        for pytz_label in tuple_[2:]:
             testing_st = sanetime(dt, tz=pytz_label)
             if st == testing_st:
                 PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label] = webex_timezone_id

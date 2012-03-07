@@ -20,10 +20,13 @@ class ResponseError(RequestError):
         self.response = response
 
 class ApiError(ResponseError):
-    def __init__(self, exception_id, reason, response, err_str=None):
-        super(ApiError, self).__init__(response, err_str or 'Api Error: %s'%(self.reason))
+    def __init__(self, response, success, exception_id, reason, value, gsb_status, err_str=None):
+        super(ApiError, self).__init__(response, err_str or 'Api Error: %s'%(reason))
+        self.success = success
         self.exception_id = exception_id
         self.reason = reason
+        self.value = value
+        self.gsb_status = gsb_status
 
 class ParseError(ResponseError):
     def __init__(self, response, err_str=None):

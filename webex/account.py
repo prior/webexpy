@@ -1,7 +1,7 @@
 import re
 from .utils import find, nfind_str, mpop, lazy_property
 from . import error
-from .exchange import Exchange, BatchListExchange
+from .exchange import Exchange, BatchListExchange, ParallelBatchListExchange
 from .event import GetListedEvents, GetHistoricalEvents
 
 
@@ -38,7 +38,7 @@ class Account(object):
 
     @lazy_property
     def version_info(self):
-        return GetVersion(self).execute()
+        return GetVersion(self).answer
 
     @property
     def version(self):
@@ -54,7 +54,7 @@ class Account(object):
 
     @lazy_property
     def site_instance(self):
-        return GetSite(self).execute()
+        return GetSite(self).answer
 
     @property
     def listed_events(self):
@@ -66,26 +66,15 @@ class Account(object):
 
     @lazy_property
     def events(self):
-        #listed_events, historical_events = ParallelBatchList(self._listed_batch_list, self._historical_batch_list).answer
-        #listed_events = self.listed_events
-        #historical_events
-        #ParallelBatchList(self._listed_batch_list).answer
-        #listed_events, historical_events = ParallelBatchList(self._listed_batch_list, self._historical_batch_list).answer
-        events_hash = dict((e.session_key, e) for e in self.listed_events)
-        for e in self.historical_events:
-            if events_hash.get(e.session_key):
-                events_hash[e.session_key].merge(e)
-            else:
-                events_hash[e.session_key] = e
-        return sorted(events_hash.values(), key=lambda e: e.starts_at)
+        return ParallelBatchListExchange([self._listed_batch_list, self._historical_batch_list], 'starts_at').items
 
     @lazy_property
     def _listed_batch_list(self):
-        return BatchListExchange(self, GetListedEvents, 'session_key', batch_size=6, overlap=2)
+        return BatchListExchange(self, GetListedEvents, 'session_key', batch_size=50, overlap=2)
 
     @lazy_property
     def _historical_batch_list(self):
-        return BatchListExchange(self, GetHistoricalEvents, 'session_key', batch_size=6, overlap=2)
+        return BatchListExchange(self, GetHistoricalEvents, 'session_key', batch_size=50, overlap=2)
 
 
 class GetVersion(Exchange):
