@@ -29,6 +29,8 @@ class Event(object):
         self._started_at = started_at and sanetztime(started_at, tz=actual_timezone)
         self._ended_at = ended_at and sanetztime(ended_at, tz=actual_timezone)
 
+        self.duration = mpop(kwargs, 'duration') or None
+
         self.description = mpop(kwargs, 'description') or None
         self.session_key = mpop(kwargs, 'session_key', 'sessionKey')
         self.visibility = mpop(kwargs, 'listing', 'listStatus', fallback='PUBLIC').strip().lower()
@@ -123,6 +125,13 @@ class Event(object):
 
     @property
     def duration(self): return self.scheduled_duration or self.actual_duration
+    @duration.setter
+    def duration(self, value):
+        if not value: return
+        if self._starts_at:
+            self._ends_at = self._starts_at + value*60*10**6
+        elif self._started_at:
+            self._ended_at = self._ends_at + value*60*10**6
     
     @property
     def scheduled_duration(self): return self.starts_at and self.ends_at and (self.ends_at-self.starts_at+30*10**6)/(60*10**6)

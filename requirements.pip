@@ -6,8 +6,10 @@ unittest2==0.5.1
 requests==0.10.6
 
 #gevent==0.13.6  # this version does not work well with async -- gotta use devel version!
-cython
+cython==0.15.1
 https://bitbucket.org/denis/gevent/get/745149cd866d.tar.gz
 
 -e git://github.com/prior/sanetime.git@v3.1.2#egg=sanetime-3.1.2
+#-e ../sanetime
+
 
