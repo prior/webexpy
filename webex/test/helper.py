@@ -1,9 +1,7 @@
 import os
 import json
-from .error import TestError
 from ..utils import lazy_property, reraise
 from ..account import Account
-
 
 TEST_ACCOUNTS_FILENAME = 'test_accounts.json'
 COMMON_DISCLAIMER = """
@@ -12,6 +10,7 @@ Unittests are designed to be non-destructive to current data on the account.
 Of course a bug could break that design, but precluding that, you should be able to run these unittests on your webex account without it affecting the current state of things.
 """ % (TEST_ACCOUNTS_FILENAME, TEST_ACCOUNTS_FILENAME)
 
+class TestError(ValueError): pass
 
 class TestHelper(object):
     def __init__(self, **kwargs):
@@ -25,7 +24,7 @@ class TestHelper(object):
 
     @lazy_property
     def account(self):
-        return self.__getitem__('hubspottraining')
+        return self.__getitem__('default')
 
     @lazy_property
     def _accounts_dict(self):

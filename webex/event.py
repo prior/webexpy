@@ -1,8 +1,11 @@
 import uuid
-from .utils import grab, nstrip, mpop, nint, find_all, nfind_str
+from .utils import grab, nstrip, mpop, nint, find_all, nfind_str, lazy_property
 from sanetime import sanetztime,sanetime
 from . import timezone
-from .exchange import GetListExchange, Exchange
+from .exchange import Exchange, GetListExchange, BatchListExchange, ParallelBatchListExchange
+from .registrant import GetGeneralRegistrants, GetAttendedRegistrants
+from . import exchange
+from . import registrant
 
 
 class Event(object):
@@ -54,9 +57,48 @@ class Event(object):
     def clone(self):
         return Event(self.account).merge(self)
 
-    def create(self): return CreateEvent(self.account, self).answer
-    def update(self): return UpdateEvent(self.account, self).answer
-    def delete(self): return DeleteEvent(self.account, self).answer
+    def create(self): return CreateEvent(self).answer
+    def update(self): return UpdateEvent(self).answer
+    def delete(self): return DeleteEvent(self).answer
+
+    @property
+    def general_registrants(self): return self.get_general_registrants()
+
+    @property
+    def attended_registrants(self): return self.get_attended_registrants()
+
+    @lazy_property
+    def registrants(self): return self.get_registrants()
+
+    def get_general_registrants(self, bust=False):
+        if bust: del self._general_batch_list
+        return self._general_batch_list.items
+
+    def get_attended_registrants(self, bust=False):
+        if bust: del self._attended_batch_list
+        return self._attended_batch_list.items
+
+    def get_registrants(self, bust=False):
+        if bust: 
+            del self.registrants
+            del self._general_batch_list
+            del self._attended_batch_list
+        return ParallelBatchListExchange([self._general_batch_list, self._attended_batch_list]).items
+
+    @lazy_property
+    def _general_batch_list(self):
+        return BatchListExchange(GetGeneralRegistrants, self, 'email', batch_size=200, overlap=3)
+
+    @lazy_property
+    def _attended_batch_list(self):
+        return BatchListExchange(GetAttendedRegistrants, self, 'email', batch_size=50, overlap=2)
+
+    def create_registrants(self, registrants):
+        return exchange.batch_bulk_action(registrant.CreateRegistrants, registrants, batch_size=50)
+
+    def delete_registrants(self, registrants):
+        return exchange.batch_action(registrant.DeleteRegistrant, registrants)
+
 
 
     @property
@@ -89,8 +131,12 @@ class Event(object):
     def actual_duration(self): return self.started_at and self.ended_at and (self.ended_at-self.started_at+30*10**6)/(60*10**6)
 
     @property
+    def timezone(self):
+        return self.started_at and self.started_at.tz or self.stopped_at and self.stopped_at.tz or self.starts_at and self.starts_at.tz or self.stops_at and self.stops_at.tz 
+
+    @property
     def upsert_xml(self):
-        return """
+        return u"""
 <accessControl><listing>%s</listing>%s</accessControl>%s
 <schedule><startDate>%s</startDate><duration>%s</duration><timeZoneID>%s</timeZoneID></schedule>
 <metaData><sessionName>%s</sessionName><description>%s</description></metaData> """ % (
@@ -103,21 +149,21 @@ class Event(object):
         self.title,
         self.description)
 
+    def __repr__(self): return str(self)
+    def __str__(self): return unicode(self).encode('utf-8')
+    def __unicode__(self):
+        return u"%s%s %s %s %s %s %sm" % (self._starts_at and 'L' or ' ', self._started_at and 'H' or ' ', self.session_key, self.starts_at.strftime("%d.%m.%y %H:%M"), self.title, self.starts_at.tz.zone, self.duration)
 
-    def __str__(self):
-        return repr(self)
-    def __repr__(self):
-        return "%s%s %s %s %s %s %ss" % (self._starts_at and 'L' or ' ', self._started_at and 'H' or ' ', self.session_key, self.starts_at.strftime("%d.%m.%y %H:%M"), self.title, self.starts_at.tz.zone, self.duration)
 
     @classmethod
     def random(kls, account, count=None):
         events = []
         for i in xrange(count or 1):
-            guid = str(uuid.uuid4())[:16]
+            guid = ''.join(str(uuid.uuid4()).split('-'))
             now = sanetztime(s=sanetime().s, tz='America/New_York')
             events.append( Event(
                     account, 
-                    title = 'unittest #%s' % guid,
+                    title = u'unittest #%s' % guid[:16],
                     description = '#%s:  An event created by unittests.  If you\'re seeing this, then something went wrong.  All events created by unittests are immediately cleaned up.' % guid,
                     starts_at = now+15*60*10**6,
                     ends_at = now+30*60*10**6))
@@ -127,42 +173,42 @@ class Event(object):
 class GetListedEvents(GetListExchange):
     ns = 'event'
     def _list_input(self): 
-        return '<bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">%s</bodyContent>'
-    def _list_answer(self, body_content): 
+        return u'<bodyContent xsi:type="java:com.webex.service.binding.event.LstsummaryEvent">%s</bodyContent>'
+    def _process_list_xml(self, body_content):
         return [Event(self.account, **grab(elem, 'sessionName','startDate','endDate','timeZoneID','description','sessionKey','listStatus', ns='event')) for elem in find_all(body_content, 'event:event')]
 
 
 class GetHistoricalEvents(GetListExchange):
     ns = 'history'
     def _list_input(self): 
-        return '<bodyContent xsi:type="java:com.webex.service.binding.history.LsteventsessionHistory">%s</bodyContent>'
-    def _list_answer(self, body_content): 
+        return u'<bodyContent xsi:type="java:com.webex.service.binding.history.LsteventsessionHistory">%s</bodyContent>'
+    def _process_list_xml(self, body_content):
         return [Event(self.account, **grab(elem, 'confName','sessionStartTime','sessionEndTime','timezone','sessionKey', ns='history')) for elem in find_all(body_content, 'history:eventSessionHistory')]
 
 
 class EventExchange(Exchange):
-    def __init__(self, account, event, request_opts=None, **opts):
-        super(EventExchange, self).__init__(account, request_opts, **opts)
+    def __init__(self, event, request_opts=None, **opts):
+        super(EventExchange, self).__init__(event.account, request_opts, **opts)
         self.event = event
 
 
 class CreateEvent(EventExchange):
     def _input(self): 
-        return '<bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">%s</bodyContent>' % self.event.upsert_xml
-    def _answer(self, body_content): 
+        return u'<bodyContent xsi:type="java:com.webex.service.binding.event.CreateEvent">%s</bodyContent>' % self.event.upsert_xml
+    def _process_xml(self, body_content):
         self.event.session_key = nfind_str(body_content, 'event:sessionKey')
         return self.event
 
 
 class UpdateEvent(EventExchange):
     def _input(self): 
-        return '<bodyContent xsi:type="java:com.webex.service.binding.event.SetEvent">%s</bodyContent>' % self.event.upsert_xml
-    def _answer(self, body_content): 
+        return u'<bodyContent xsi:type="java:com.webex.service.binding.event.SetEvent">%s</bodyContent>' % self.event.upsert_xml
+    def _process_xml(self, body_content):
         return self.event
 
 
 class DeleteEvent(EventExchange):
     def _input(self): 
-        return '<bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent"><sessionKey>%s</sessionKey></bodyContent>' % self.event.session_key
-    def _answer(self, body_content): 
+        return u'<bodyContent xsi:type="java:com.webex.service.binding.event.DelEvent"><sessionKey>%s</sessionKey></bodyContent>' % self.event.session_key
+    def _process_xml(self, body_content):
         return self.event

@@ -100,6 +100,7 @@ class EventTest(unittest2.TestCase):
         listed_keys = set(e.session_key for e in self.account.listed_events)
         historical_keys = set(e.session_key for e in self.account.historical_events)
         self.assertEquals(keys, listed_keys | historical_keys)
+#        from pprint import pprint; pprint(events)
 
     @unittest2.skip('sanity checks we don\'t need to run every time')
     def test_sync_listed_events(self):

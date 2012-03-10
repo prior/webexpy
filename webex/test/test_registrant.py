@@ -1,216 +1,195 @@
 import unittest2
-from nose.plugins.attrib import attr
+from ..registrant import Registrant, GetGeneralRegistrants, GetAttendedRegistrants
+from ..event import Event
+from .helper import TestHelper
+from ..exchange import BatchListExchange
+from ..utils import lazy_property
+from sanetime import sanetime, sanetztime
 
-from webex.error import WebExError
-from webex.event_controller import EventController
-from webex.attendee_controller import AttendeeController
-from sanetime import sanetime
+class RegistrantTest(unittest2.TestCase):
 
-import helper
-import logger
+    def setUp(self): 
+        self.th = TestHelper()
+        self.account = self.th.account
 
-class AttendeeControllerTest(unittest2.TestCase):
+    def tearDown(self): pass
 
-    # these integration tests are normally commented out so we don't incur their hits on every run of our test suite
-    def setUp(self):
-        print "\r"
-        self.account = helper.get_account()
-        self.event_controller = EventController(self.account)
-        self.event = self.event_controller.create(helper.generate_event())
-        self.attendee_controller = AttendeeController(self.account, self.event)
+    def test_name_conversion(self):
+        event = Event.random(self.account)
+        r = Registrant(event, first_name = 'John', last_name='Smith', name='John Smith')
+        self.assertEquals('John', r.first_name)
+        self.assertEquals('Smith', r.last_name)
+        self.assertEquals('John Smith', r.name)
 
-    def tearDown(self):
-        pass
-        self.event_controller.delete(self.event)
+    def test_equality(self):
+        event = Event.random(self.account)
+        registrant1 = Registrant.random(event)
 
-    @attr('api')
-    def test_create_invitee(self):
-        attendee = helper.generate_attendee()
-        self.assertIsNone(attendee.attendee_id)
-        self.assertTrue(self.attendee_controller.create_invitee(attendee))
-        self.assertIsNotNone(attendee.attendee_id)
+        self.assertEquals(registrant1, registrant1)
+        self.assertTrue(registrant1 == registrant1)
+        self.assertFalse(registrant1 != registrant1)
+        self.assertFalse(registrant1 < registrant1)
+        self.assertFalse(registrant1 > registrant1)
+        self.assertTrue(registrant1 >= registrant1)
+        self.assertTrue(registrant1 <= registrant1)
 
-    @attr('api')
-    def test_create_single_registrant(self):
-        attendee = helper.generate_attendee()
-        self.assertIsNone(attendee.attendee_id)
-        self.assertTrue(self.attendee_controller.create_registrant(attendee))
-        self.assertIsNotNone(attendee.attendee_id)
+        registrant2 = Registrant.random(event)
+        registrant1.email = '00000000.00000000@0000000000000000.com'
 
-    @attr('api')
-    def test_create_bulk_registrants(self):
-        size = 300
-        attendees = []
-        for i in xrange(size):
-            attendee = helper.generate_attendee()
-            attendees.append(attendee)
-            self.assertIsNone(attendee.attendee_id)
-        starts_at = sanetime()
-        self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
-        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
-        for i in xrange(size):
-            self.assertIsNotNone(attendees[i].attendee_id)
+        self.assertNotEquals(registrant1, registrant2)
+        self.assertFalse(registrant1 == registrant2)
+        self.assertTrue(registrant1 != registrant2)
+        self.assertTrue(registrant1 < registrant2)
+        self.assertFalse(registrant1 > registrant2)
+        self.assertFalse(registrant1 >= registrant2)
+        self.assertTrue(registrant1 <= registrant2)
 
-    @attr('api')
-    def test_list_registrants(self):
-        new_registrants = [helper.generate_attendee(), helper.generate_attendee()]
-        registrant_ids = [a.attendee_id for a in self.attendee_controller.list_registrants()]
-        self.assertEquals(len(registrant_ids), self.attendee_controller.registrants_count)
-        for a in new_registrants:
-            self.assertNotIn(a.attendee_id, registrant_ids)
-            self.attendee_controller.create_registrant(a)
-        registrant_ids = [a.attendee_id for a in self.attendee_controller.list_registrants()]
-        self.assertEquals(len(registrant_ids), self.attendee_controller.registrants_count)
-        for a in new_registrants:
-            self.assertIn(a.attendee_id, registrant_ids)
-            self.attendee_controller.delete(a)
+    def test_clone(self):
+        event = Event.random(self.account)
+        registrant = Registrant.random(event)
+        clone = registrant.clone()
+        extra = Registrant.random(event)
+        self.assertEquals(registrant, clone)
+        self.assertNotEquals(registrant, extra)
 
-    # difficult to test, cuz no way to programatically make an attendant see a video-- have to test this manually
-    @attr('api')
-    def test_list_attendants(self):
-        attendee_list = self.attendee_controller.list_attendants()
-        self.assertEquals(len(attendee_list), self.attendee_controller.attendants_count)
-        self.assertIsNotNone(attendee_list)
-        for attendee in attendee_list:
-            print attendee
+    def test_view_collapsing(self):
+        event = Event.random(self.account)
+        r1 = Registrant(event, email="first@hs.com",viewings=[[sanetime(s=100),sanetime(s=200)]])
+        self.assertEquals([[sanetime(s=100),sanetime(s=200)]], r1.viewings)
+        r2 = Registrant(event,email="first@hs.com",viewings=[[sanetime(s=300),sanetime(s=400)]])
+        self.assertEquals([[sanetime(s=300),sanetime(s=400)]], r2.viewings)
+        r1.merge(r2)
+        self.assertEquals([[sanetime(s=100),sanetime(s=200)],[sanetime(s=300),sanetime(s=400)]], r1.viewings)
 
-    @attr('api')
-    def test_bad_delete(self):
-        with self.assertRaises(WebExError):
-            self.attendee_controller.delete(attendee_id=2983492342)
+    def _get_or_create_event(self, size):
+        title = 'unittests: permanent event (%s)' % size
+        event = None
+        for e in self.account.listed_events:
+            if e.title == title: return e
+        event = Event.random(self.account)
+        event.title = title
+        event.starts_at = sanetztime('2013-01-01 00:00:00', tz='America/New_York')
+        event.create()
+        event.create_registrants(Registrant.random(event, size))
+        return event
 
-    @attr('api')
-    def test_good_delete_by_id(self):
-        attendee = helper.generate_attendee()
-        attendee = self.attendee_controller.create_invitee(attendee)
-        self.assertTrue(attendee)
-        self.assertIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_registrants()])
-        self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_registrants()])
+    @lazy_property
+    def big_event(self): return self._get_or_create_event(4000)
+    @lazy_property
+    def moderate_event(self): return self._get_or_create_event(500)
 
-        attendee = helper.generate_attendee()
-        attendee = self.attendee_controller.create_registrant(attendee)
-        self.assertTrue(attendee)
-        self.assertIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_registrants()])
-        self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.attendee_id, [a.attendee_id for a in self.attendee_controller.list_registrants()])
+    @unittest2.skip('huge bulk actions: may trigger 503s')
+    def test_huge_crud(self):
+        size = 3000
+        event = Event.random(self.account).create()
+        registrants = dict((r.email,r) for r in Registrant.random(event, size))
+        start = sanetime()
+        expected = dict((r.email,r) for r in event.create_registrants(registrants.values()))
+        after_create = sanetime()
+        actual = dict((r.email,r) for r in event.general_registrants)
+        after_listing = sanetime()
+        self.assertEquals(registrants, expected)
+        self.assertEquals(expected, actual)
+        self.assertEquals(size, len(expected))
+        print "\nCREATE TIMING: %sms\nLISTING TIMING: %sms" % (after_create.ms-start.ms, after_listing.ms-after_create.ms,)
 
-    @attr('api')
-    def test_good_delete_by_email(self):
-        attendee = helper.generate_attendee()
-        attendee = self.attendee_controller.create_invitee(attendee)
-        self.assertTrue(attendee)
-        attendee.attendee_id = None
-        self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list_registrants()])
-        self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list_registrants()])
+    def test_general_registrants(self, event=None):
+        ev = event or self.moderate_event
+        registrants = ev.general_registrants
+        self.assertEquals(len(registrants), len(set(r.email for r in registrants)))
+        if ev == self.moderate_event:  # random events may have duplicate emails that were merged during batching
+            count = GetGeneralRegistrants(ev, 1, 0).answer[1]
+            self.assertEquals(count, len(registrants))
 
-        attendee = helper.generate_attendee()
-        attendee = self.attendee_controller.create_registrant(attendee)
-        self.assertTrue(attendee)
-        attendee.attendee_id = None
-        self.assertIn(attendee.email, [a.email for a in self.attendee_controller.list_registrants()])
-        self.assertTrue(self.attendee_controller.delete(attendee))
-        self.assertNotIn(attendee.email, [a.email for a in self.attendee_controller.list_registrants()])
+    def test_attended_registrants(self, event=None):
+        ev = event or self.moderate_event
+        #count = GetAttendedRegistrants(ev, 1, 0).answer[1]
+        registrants = ev.attended_registrants
+        self.assertEquals(len(registrants), len(set(r.email for r in registrants)))
+        #TODO: any better way to verify?  maybe not
 
-    @attr('api')
-    def test_batching_slicing_and_dicing(self):
-        # setup
-        expected_attendee_ids = set()
-        for i in xrange(5):
-            attendee = helper.generate_attendee()
-            self.assertTrue(self.attendee_controller.create_registrant(attendee))
-            expected_attendee_ids.add(attendee.attendee_id)
+    def test_registrants(self, event=None):
+        ev = event or self.moderate_event
+        registrants = ev.registrants
+        emails = set(r.email for r in registrants)
+        general_emails = set(r.email for r in ev.general_registrants)
+        attended_emails = set(e.email for e in ev.attended_registrants)
+        self.assertEquals(emails, general_emails | attended_emails)
+        if ev == self.moderate_event:  # random events may have duplicate emails that were merged during batching
+            count = GetGeneralRegistrants(ev, 1, 0).answer[1]
+            self.assertEquals(count, len(registrants))
+        return registrants
 
-        for i in xrange(5):
-            registrants = self.attendee_controller.list_registrants(batch_size=i+1)
-            actual_attendee_ids = set(a.attendee_id for a in registrants)
-            self.assertEquals(expected_attendee_ids, actual_attendee_ids)
+    @unittest2.skip('long running')
+    def test_sync_general_registrants(self, event=None):
+        ev = event or self.big_event
+        registrants = ev.general_registrants
+        sync_registrants = BatchListExchange(self.event, GetGeneralRegistrants, 'email', batch_size=2, overlap=1, async=False).items
+        self.assertEquals(registrants, sync_registrants)
 
+    @unittest2.skip('long running')
+    def test_sync_attended_registrants(self, event=None):
+        ev = event or self.big_event
+        registrants = ev.attended_registrants
+        sync_registrants = BatchListExchange(self.event, GetAttendedRegistrants, 'email', batch_size=2, overlap=1, async=False).items
+        self.assertEquals(registrants, sync_registrants)
 
-    @unittest2.skip('this test takes a while')
-    @attr('api')
-    def test_volume_batching(self):   # looks like larger number is better here -- going with 500 for default
-        # setup
-        expected_attendee_ids = set()
-        attendees = []
-        for i in xrange(400):
-            attendees.append(helper.generate_attendee())
-        self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
-        for i in xrange(400):
-            self.assertTrue(attendees[i].attendee_id)
-        expected_attendee_ids = set(a.attendee_id for a in attendees)
+    @unittest2.skip('super thorough, super long test')
+    def test_max_timing(self):  # against all known accounts, and all their events:
+        from pprint import pprint
+        max_info = (None, 0)
+        for k in self.th._accounts_dict.keys():
+            pprint(self.th[k])
+            for e in self.th[k].events:
+                started = sanetime()
+                registrants = e.registrants
+                elapsed = sanetime().s-started.s
+                if elapsed > max_info[1]: 
+                    max_info = ("%s %s %s %s" % (e.account.site_name, e.session_key, e.title, len(registrants)), elapsed)
+                    print max_info
+        print max_info
 
-        starts_at = sanetime()
-        registrants = self.attendee_controller.list_registrants(batch_size=25)
-        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+    @unittest2.skip('super thorough, super long test')
+    def test_blanket(self):  # against all known accounts, and all their events:
+        from pprint import pprint
+        for k in self.th._accounts_dict.keys():
+            pprint(self.th[k])
+            for e in self.th[k].events:
+                pprint(e)
+                self.test_general_registrants(e)
+                self.test_attended_registrants(e)
+                registrants = self.test_registrants(e)
+                pprint(registrants)
+
+    def test_crud(self):
+        event = Event.random(self.account).create()
+        registrants = dict((r.email,r) for r in event.get_general_registrants(True))
         
-        actual_attendee_ids = set(a.attendee_id for a in registrants)
-        self.assertEquals(400, len(actual_attendee_ids))
-        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
+        new_registrant = Registrant.random(event).create()
+        registrants_after_create = dict((r.email,r) for r in event.get_general_registrants(True))
+        self.assertNotIn(new_registrant.email, registrants)
+        self.assertIn(new_registrant.email, registrants_after_create)
+        self.assertEquals(new_registrant, registrants_after_create[new_registrant.email])
 
-        starts_at = sanetime()
-        registrants = self.attendee_controller.list_registrants(batch_size=50)
-        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+        deleted_registrant = new_registrant.delete()
+        registrants_after_delete = dict((r.email,r) for r in event.get_general_registrants(True))
+        self.assertIn(deleted_registrant.email, registrants_after_create)
+        self.assertNotIn(deleted_registrant.email, registrants_after_delete)
+        event.delete()
 
-        actual_attendee_ids = set(a.attendee_id for a in registrants)
-        self.assertEquals(400, len(actual_attendee_ids))
-        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
+    def test_batch_crud(self):
+        event = Event.random(self.account).create()
+        registrants = dict((r.email,r) for r in event.get_general_registrants(True))
 
-        starts_at = sanetime()
-        registrants = self.attendee_controller.list_registrants(batch_size=100)
-        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
+        new_registrants = Registrant.random(event, 10)
+        new_registrants = dict((r.email,r) for r in event.create_registrants(new_registrants))
+        registrants_after_create = dict((r.email,r) for r in event.get_general_registrants(True))
+        self.assertEquals({}, dict((email, registrants[email]) for email in set(registrants) & set(new_registrants)))
+        self.assertEquals(new_registrants, dict((email, registrants_after_create[email]) for email in (set(registrants_after_create) & set(new_registrants))))
 
-        actual_attendee_ids = set(a.attendee_id for a in registrants)
-        self.assertEquals(400, len(actual_attendee_ids))
-        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
-
-        starts_at = sanetime()
-        registrants = self.attendee_controller.list_registrants(batch_size=200)
-        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
-
-        actual_attendee_ids = set(a.attendee_id for a in registrants)
-        self.assertEquals(400, len(actual_attendee_ids))
-        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
-
-        starts_at = sanetime()
-        registrants = self.attendee_controller.list_registrants(batch_size=400)
-        print "compeleted in %.2f s" % ((sanetime().ms - starts_at.ms)/1000.0,)
-
-        actual_attendee_ids = set(a.attendee_id for a in registrants)
-        self.assertEquals(400, len(actual_attendee_ids))
-        self.assertEquals(expected_attendee_ids, actual_attendee_ids)
-
-
-    @unittest2.skip('this test takes a while')
-    @attr('api')
-    def test_list_registrants_over_boundary_on_change(self):
-        # setup
-        TIMES = 10
-        expected_attendee_ids = set()
-        attendees = []
-        for i in xrange(2*TIMES):
-            attendees.append(helper.generate_attendee())
-        self.assertTrue(self.attendee_controller.bulk_create_registrants(attendees))
-        expected_attendee_ids = [a.attendee_id for a in attendees]
-        self.assertTrue(all(expected_attendee_ids))
-        self.assertEquals(len(expected_attendee_ids), len(set(expected_attendee_ids)))
-
-        def list_pre_batch_callback(batch_number):
-            if batch_number<=TIMES:
-                attendees.append(helper.generate_attendee())
-                self.assertTrue(self.attendee_controller.create_registrant(attendees[-1]))
-                expected_attendee_ids.append(attendees[-1].attendee_id)
-                self.assertTrue(attendees[-1].attendee_id)
-
-        registrants = self.attendee_controller.list_registrants(batch_size=2, pre_callback=list_pre_batch_callback)
-
-        actual_attendee_ids = [a.attendee_id for a in registrants]
-        self.assertTrue(all(actual_attendee_ids))
-        self.assertEquals(len(actual_attendee_ids), len(set(actual_attendee_ids)))
-        self.assertTrue(len(expected_attendee_ids) >= len(actual_attendee_ids))
-        self.assertFalse(set(actual_attendee_ids)-set(expected_attendee_ids))
-
-
-if __name__ == '__main__':
-    unittest2.main()
+        deleted_registrants = dict((r.email, r) for r in event.delete_registrants(new_registrants.values()))
+        registrants_after_delete = dict((r.email,r) for r in event.get_general_registrants(True))
+        self.assertEquals(deleted_registrants, dict((email, registrants_after_create[email]) for email in set(registrants_after_create) & set(deleted_registrants)))
+        self.assertEquals({}, dict((email, registrants_after_delete[email]) for email in set(registrants_after_delete) & set(deleted_registrants)))
+        event.delete()
+        

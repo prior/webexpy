@@ -7,7 +7,7 @@ from . import event
 from . import exchange
 
 
-REQUEST_XML = """<?xml version="1.0" encoding="UTF-8"?>
+REQUEST_XML = u"""<?xml version="1.0" encoding="UTF-8"?>
 <serv:message xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:serv="http://www.webex.com/schemas/2002/06/service">
 <header>
     <securityContext>
@@ -83,34 +83,39 @@ class Account(object):
             del self.events
             del self._listed_batch_list
             del self._historical_batch_list
-        return ParallelBatchListExchange([self._listed_batch_list, self._historical_batch_list], 'starts_at').items
+        return ParallelBatchListExchange([self._listed_batch_list, self._historical_batch_list]).items
 
     def create_events(self, events):
-        return exchange.batch_action(self, event.CreateEvent, events)
+        return exchange.batch_action(event.CreateEvent, events)
 
     def update_events(self, events):
-        return exchange.batch_action(self, event.UpdateEvent, events)
+        return exchange.batch_action(event.UpdateEvent, events)
 
     def delete_events(self, events):
-        return exchange.batch_action(self, event.DeleteEvent, events)
+        return exchange.batch_action(event.DeleteEvent, events)
 
     @lazy_property
     def _listed_batch_list(self):
-        return BatchListExchange(self, GetListedEvents, 'session_key', batch_size=50, overlap=2)
+        return BatchListExchange(GetListedEvents, self, 'session_key', batch_size=50, overlap=2)
 
     @lazy_property
     def _historical_batch_list(self):
-        return BatchListExchange(self, GetHistoricalEvents, 'session_key', batch_size=50, overlap=2)
+        return BatchListExchange(GetHistoricalEvents, self, 'session_key', batch_size=50, overlap=2)
 
+
+    def __repr__(self): return str(self)
+    def __str__(self): return unicode(self).encode('utf-8')
+    def __unicode__(self):
+        return "https://%s.webex.com [%s]" % (self.site_name, self.username)
 
 
 
 class GetVersion(Exchange):
     def _input(self): return '<bodyContent xsi:type="java:com.webex.service.binding.ep.GetAPIVersion"></bodyContent>'
-    def _answer(self, body_content): return (nfind_str(body_content, 'ep:apiVersion'), nfind_str(body_content, 'ep:release'))
+    def _process_xml(self, body_content): return (nfind_str(body_content, 'ep:apiVersion'), nfind_str(body_content, 'ep:release'))
 
 
 class GetSite(Exchange):
     def _input(self): return '<bodyContent xsi:type="java:com.webex.service.binding.site.GetSite" />'
-    def _answer(self, body_content): return find(body_content, 'site:siteInstance')
+    def _process_xml(self, body_content): return find(body_content, 'site:siteInstance')
 

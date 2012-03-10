@@ -1,6 +1,6 @@
-pywebex
+webexpy
 =======
 
-A python wrapper around the Cisco WebEx XML API.  We're starting small, focusing on the core feature set initially.
+A very solid python wrapper around the Cisco WebEx XML API.  Focuses on the Site Center right now.  Super solid.
 
 
