@@ -21,6 +21,11 @@ class AccountTest(unittest2.TestCase):
         with self.assertRaises(e.InvalidAccount): Account(password='test', site_name='test')
         with self.assertRaises(e.TimeoutError): account.GetVersion(self.account, request_opts={'timeout':0.001}).answer
 
+    def test_constructor(self):
+        kwargs = dict(username='amoorthy', password='Thursday123', site_name='hubspoteng')
+        account = Account(**kwargs)
+        self.assertTrue(account)
+
     def test_version_info(self):
         self.assertEquals(('WebEx XML API V5.9.0','SP1'), self.account.version_info)
         self.assertEquals(5.9, self.account.version)
