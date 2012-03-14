@@ -3,6 +3,7 @@ from .utils import mpop,nstrip,find,find_all,grab,nfind_str
 from .exchange import Exchange, GetListExchange
 from sanetime import sanetime
 from . import error
+from xml.sax.saxutils import escape as xml_escape
 
 class Registrant(object):
     def __init__(self, event, **kwargs):
@@ -87,7 +88,7 @@ class Registrant(object):
     @property
     def create_xml(self):
         template = '<attendees><person><firstName>%s</firstName><lastName>%s</lastName><email>%s</email></person><sessionKey>%s</sessionKey><joinStatus>ACCEPT</joinStatus><emailInvitations>TRUE</emailInvitations></attendees>'
-        return template % (self.first_name, self.last_name, self.email, self.event.session_key)
+        return template % (xml_escape(self.first_name), xml_escape(self.last_name), xml_escape(self.email), self.event.session_key)
 
     def __repr__(self): return str(self)
     def __str__(self): return unicode(self).encode('utf-8')
@@ -102,8 +103,8 @@ class Registrant(object):
             guid = ''.join(str(uuid.uuid4()).split('-'))
             registrants.append( Registrant(
                     event, 
-                    first_name = u'John %s' % guid[:8],
-                    last_name = u'Smith %s' % guid[8:16],
+                    first_name = u'John %s <>&' % guid[:8],
+                    last_name = u'Smith %s <>&' % guid[8:16],
                     email = u'%s.%s@%s.com' % (guid[:8],guid[:8:16],guid[16:])))
         return count is None and registrants[0] or registrants
 

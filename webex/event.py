@@ -6,6 +6,7 @@ from .exchange import Exchange, GetListExchange, BatchListExchange, ParallelBatc
 from .registrant import GetGeneralRegistrants, GetAttendedRegistrants
 from . import exchange
 from . import registrant
+from xml.sax.saxutils import escape as xml_escape
 
 
 class Event(object):
@@ -155,8 +156,8 @@ class Event(object):
         self.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
         (self.ends_at-self.starts_at+30*10**6)/(60*10**6),
         timezone.get_id(self.starts_at.tz.zone),
-        self.title,
-        self.description)
+        xml_escape(self.title),
+        xml_escape(self.description))
 
     def __repr__(self): return str(self)
     def __str__(self): return unicode(self).encode('utf-8')
@@ -172,8 +173,8 @@ class Event(object):
             now = sanetztime(s=sanetime().s, tz='America/New_York')
             events.append( Event(
                     account, 
-                    title = u'unittest #%s' % guid[:16],
-                    description = '#%s:  An event created by unittests.  If you\'re seeing this, then something went wrong.  All events created by unittests are immediately cleaned up.' % guid,
+                    title = u'unittest #%s & < > ' % guid[:16],
+                    description = u'#%s:  An event created by unittests.  If you\'re seeing this, then something went wrong.  All events created by unittests are immediately cleaned up. & < > ' % guid,
                     starts_at = now+15*60*10**6,
                     ends_at = now+30*60*10**6))
         return count is None and events[0] or events

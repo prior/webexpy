@@ -3,7 +3,7 @@ lxml==2.3.1
 nose==1.1.2
 rudolf==0.3
 unittest2==0.5.1
-requests==0.10.6
+requests==0.10.7
 
 #gevent==0.13.6  # this version does not work well with async -- gotta use devel version!
 cython==0.15.1

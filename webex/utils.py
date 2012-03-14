@@ -73,7 +73,7 @@ def nfind(elem, *args):
 def nfind_str(elem, *args):
     elem = nfind(elem, *args)
     if elem is None: return None
-    return elem.text.strip()
+    return elem.text
 
 def nfind_lstr(elem, *args):
     s = nfind_str(elem, *args)

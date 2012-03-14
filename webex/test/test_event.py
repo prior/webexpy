@@ -2,6 +2,7 @@ import unittest2
 from ..event import GetListedEvents,GetHistoricalEvents,Event
 from .helper import TestHelper
 from ..exchange import BatchListExchange
+from sanetime import sanetztime
 
 class EventTest(unittest2.TestCase):
 
