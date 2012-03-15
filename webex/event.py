@@ -173,8 +173,8 @@ class Event(object):
             now = sanetztime(s=sanetime().s, tz='America/New_York')
             events.append( Event(
                     account, 
-                    title = u'unittest #%s & < > ' % guid[:16],
-                    description = u'#%s:  An event created by unittests.  If you\'re seeing this, then something went wrong.  All events created by unittests are immediately cleaned up. & < > ' % guid,
+                    title = u'unittest #%s &<>\xfc\u2603 ' % guid[:16],
+                    description = u'#%s:  An event created by unittests.  If you\'re seeing this, then something went wrong.  All events created by unittests are immediately cleaned up. &<>\xfc\u2603 ' % guid,
                     starts_at = now+15*60*10**6,
                     ends_at = now+30*60*10**6))
         return count is None and events[0] or events

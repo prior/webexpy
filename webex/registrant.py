@@ -87,7 +87,7 @@ class Registrant(object):
 
     @property
     def create_xml(self):
-        template = '<attendees><person><firstName>%s</firstName><lastName>%s</lastName><email>%s</email></person><sessionKey>%s</sessionKey><joinStatus>ACCEPT</joinStatus><emailInvitations>TRUE</emailInvitations></attendees>'
+        template = u'<attendees><person><firstName>%s</firstName><lastName>%s</lastName><email>%s</email></person><sessionKey>%s</sessionKey><joinStatus>ACCEPT</joinStatus><emailInvitations>TRUE</emailInvitations></attendees>'
         return template % (xml_escape(self.first_name), xml_escape(self.last_name), xml_escape(self.email), self.event.session_key)
 
     def __repr__(self): return str(self)
@@ -103,8 +103,8 @@ class Registrant(object):
             guid = ''.join(str(uuid.uuid4()).split('-'))
             registrants.append( Registrant(
                     event, 
-                    first_name = u'John %s <>&' % guid[:8],
-                    last_name = u'Smith %s <>&' % guid[8:16],
+                    first_name = u'John %s <>&\xfc\u2603 ' % guid[:8],
+                    last_name = u'Smith %s <>&\xfc\u2603 ' % guid[8:16],
                     email = u'%s.%s@%s.com' % (guid[:8],guid[:8:16],guid[16:])))
         return count is None and registrants[0] or registrants
 

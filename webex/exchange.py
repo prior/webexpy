@@ -82,7 +82,7 @@ class Exchange(object):
     def _build_request(self, async):
         obj = async and requests.async or requests
         xml = self.account.request_xml_template % {'body':self._input()}
-        return obj.post(self.account.api_url, xml, **self.request_opts)
+        return obj.post(self.account.api_url, unicode(xml).encode('utf8'), **self.request_opts)
 
     @lazy_property
     def answer(self):
