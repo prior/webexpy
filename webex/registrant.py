@@ -1,5 +1,5 @@
 import uuid
-from .utils import mpop,nstrip,find,find_all,grab,nfind_str
+from .utils import mpop,nstrip,find,find_all,grab,nfind_str,nlower
 from .exchange import Exchange, GetListExchange
 from sanetime import sanetime
 from . import error
@@ -9,8 +9,7 @@ class Registrant(object):
     def __init__(self, event, **kwargs):
         super(Registrant, self).__init__()
         self.event = event
-
-        self.email = nstrip(mpop(kwargs, 'email', 'attendeeEmail'))
+        self.email = nlower(nstrip(mpop(kwargs, 'email', 'attendeeEmail')))
         self.attendee_id = nstrip(mpop(kwargs, 'attendee_id', 'id', 'id_'))
         self.first_name = nstrip(mpop(kwargs, 'first_name', 'firstName', 'first'))
         self.last_name = nstrip(mpop(kwargs, 'last_name', 'lastName', 'last'))
@@ -105,7 +104,7 @@ class Registrant(object):
                     event, 
                     first_name = u'John %s <>&\xfc\u2603 ' % guid[:8],
                     last_name = u'Smith %s <>&\xfc\u2603 ' % guid[8:16],
-                    email = u'%s.%s@%s.com' % (guid[:8],guid[:8:16],guid[16:])))
+                    email = u'%s.%s@%s.com' % (guid[:8].upper(),guid[:8:16],guid[16:])))
         return count is None and registrants[0] or registrants
 
 class RegistrantExchange(Exchange):
@@ -122,6 +121,19 @@ class GetRegistrantsExchange(GetListExchange):
     def __init__(self, event, size=None, offset=None, request_opts=None, **opts):
         super(GetRegistrantsExchange, self).__init__(event.account, size, offset, request_opts, **opts)
         self.event = event
+
+    @classmethod
+    def uniqify_list(kls,registrants):
+        d = {}
+        unique_registrants = []
+        for r in registrants:
+            if r.email in d: 
+                d[r.email].merge(r)
+            else:
+                d[r.email] = r
+                unique_registrants.append(r)
+        return unique_registrants
+
 
 class CreateRegistrants(RegistrantsExchange):
     def __init__(self, registrants, request_opts=None, **opts):
@@ -171,12 +183,13 @@ class GetGeneralRegistrants(GetRegistrantsExchange):
             r = Registrant(self.event, **grab(find(elem,'att:person'),'email','name','firstName','lastName',ns='com'))
             r.attendee_id = nfind_str(elem, 'att:attendeeId')
             registrants.append(r)
-        return registrants
+        return self.__class__.uniqify_list(registrants)
 
 class GetAttendedRegistrants(GetRegistrantsExchange):
     ns = 'history'
     def _list_input(self): 
         return u'<bodyContent xsi:type= "java:com.webex.service.binding.history.LsteventattendeeHistory"><sessionKey>%s</sessionKey>%%s</bodyContent>' % self.event.session_key
     def _process_list_xml(self, body_content):
-        return [Registrant(self.event, **grab(elem, 'attendeeEmail','startTime','endTime','duration','ipAddress', ns='history')) for elem in find_all(body_content, 'history:eventAttendeeHistory')]
+        return self.__class__.uniqify_list([Registrant(self.event, **grab(elem, 'attendeeEmail','startTime','endTime','duration','ipAddress', ns='history')) for elem in find_all(body_content, 'history:eventAttendeeHistory')])
+
 
