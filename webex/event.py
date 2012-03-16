@@ -34,7 +34,7 @@ class Event(object):
 
         self.description = mpop(kwargs, 'description') or None
         self.session_key = mpop(kwargs, 'session_key', 'sessionKey')
-        self.visibility = mpop(kwargs, 'listing', 'listStatus', fallback='PUBLIC').strip().lower()
+        self.visibility = mpop(kwargs, 'listing', 'listStatus', fallback=account.meetings_must_be_unlisted and 'UNLISTED' or 'PUBLIC').strip().lower()
 
     def merge(self, event):
         attrs = ['title','_starts_at','_ends_at','_started_at','_ended_at','description','session_key','visibility']

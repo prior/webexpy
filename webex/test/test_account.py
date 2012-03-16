@@ -34,6 +34,9 @@ class AccountTest(unittest2.TestCase):
     def test_meetings_require_password(self):
         self.assertTrue(self.account.meetings_require_password)
 
+    def test_meetings_must_be_unlisted(self):
+        self.assertFalse(self.account.meetings_must_be_unlisted)
+
     @unittest2.skip('this can lock the account -- only running when we need to')
     def test_invalid_username_password(self):
         a = self.account

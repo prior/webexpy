@@ -57,6 +57,10 @@ class Account(object):
     def meetings_require_password(self):
         return find(self.site_instance, 'site:securityOptions', 'site:allMeetingsPassword').text.lower() == 'true'
 
+    @property
+    def meetings_must_be_unlisted(self):
+        return find(self.site_instance, 'site:securityOptions', 'site:allMeetingsUnlisted').text.lower() == 'true'
+
     @lazy_property
     def site_instance(self):
         return GetSite(self).answer
