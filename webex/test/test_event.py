@@ -43,7 +43,10 @@ class EventTest(unittest2.TestCase):
     def test_single_crud(self):
         events = dict((e.session_key,e) for e in self.account.get_listed_events(True))
 
-        new_event = Event.random(self.account).create()
+        new_event = Event.random(self.account)
+        self.assertFalse(new_event.session_key)
+        new_event.create()
+        self.assertTrue(new_event.session_key)
         events_after_create = dict((e.session_key,e) for e in self.account.get_listed_events(True))
         self.assertNotIn(new_event.session_key, events)
         self.assertIn(new_event.session_key, events_after_create)

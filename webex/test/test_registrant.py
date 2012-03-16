@@ -54,12 +54,27 @@ class RegistrantTest(unittest2.TestCase):
 
     def test_view_collapsing(self):
         event = Event.random(self.account)
-        r1 = Registrant(event, email="first@hs.com",viewings=[[sanetime(s=100),sanetime(s=200)]])
+        r1 = Registrant(event, email="dude@hs.com",viewings=[[sanetime(s=100),sanetime(s=200)]])
         self.assertEquals([[sanetime(s=100),sanetime(s=200)]], r1.viewings)
-        r2 = Registrant(event,email="first@hs.com",viewings=[[sanetime(s=300),sanetime(s=400)]])
+        r2 = Registrant(event,email="dude@hs.com",viewings=[[sanetime(s=300),sanetime(s=400)]])
         self.assertEquals([[sanetime(s=300),sanetime(s=400)]], r2.viewings)
         r1.merge(r2)
         self.assertEquals([[sanetime(s=100),sanetime(s=200)],[sanetime(s=300),sanetime(s=400)]], r1.viewings)
+
+    def test_viewings(self):
+        event = Event.random(self.account)
+        r = Registrant(event, email="dude@hs.com")
+        self.assertIsNone(r.started_at)
+        self.assertIsNone(r.stopped_at)
+        self.assertIsNone(r.duration_in_minutes)
+        r.merge(Registrant(event, email="dude@hs.com", viewings=[[sanetime(s=60*10),sanetime(s=60*30)]]))
+        self.assertEquals(60*10, r.started_at.s)
+        self.assertEquals(60*30, r.stopped_at.s)
+        self.assertEquals(20, r.duration_in_minutes)
+        r.merge(Registrant(event, email="dude@hs.com", viewings=[[sanetime(s=60*50),sanetime(s=60*55)]]))
+        self.assertEquals(60*10, r.started_at.s)
+        self.assertEquals(60*55, r.stopped_at.s)
+        self.assertEquals(45, r.duration_in_minutes)
 
     def _get_or_create_event(self, size):
         title = 'unittests: permanent event (%s)' % size

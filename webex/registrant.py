@@ -46,15 +46,15 @@ class Registrant(object):
 
     @property
     def started_at(self):
-        self.viewings and self.viewings[0][0] or None
+        return self.viewings and self.viewings[0][0] or None
 
     @property
     def stopped_at(self):
-        self.viewings and self.viewings[-1][1] or None
+        return self.viewings and self.viewings[-1][1] or None
 
     @property
-    def duration(self):
-        self.stopped_at and self.started_at and self.stopped_at - self.started_at or None
+    def duration_in_minutes(self):
+        return self.stopped_at and self.started_at and (self.stopped_at.us-self.started_at.us+10**6*30)/(10**6*60) or None
 
     def merge(self, other):
         for a in ('email','first_name','last_name','ip_address','attendee_id'):
@@ -93,7 +93,7 @@ class Registrant(object):
     def __str__(self): return unicode(self).encode('utf-8')
     def __unicode__(self):
         viewings = ' , '.join(["%s - %s" % (v[0].to_timezoned_datetime(self.event.timezone).strftime("%d.%m.%y %H:%M:%S"),v[1].to_timezoned_datetime(self.event.timezone).strftime("%d.%m.%y %H:%M:%S")) for v in self.viewings])
-        return u"%s %s %s %s %s %s [ %s ] %s" % (self.viewings and 'A' or 'R', self.attendee_id, self.email, self.first_name, self.last_name, self.duration, viewings, self.ip_address)
+        return u"%s %s %s %s %s %s [ %s ] %s" % (self.viewings and 'A' or 'R', self.attendee_id, self.email, self.first_name, self.last_name, self.duration_in_minutes, viewings, self.ip_address)
 
     @classmethod
     def random(kls, event, count=None):
