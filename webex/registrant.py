@@ -86,8 +86,13 @@ class Registrant(object):
 
     @property
     def create_xml(self):
-        template = u'<attendees><person><firstName>%s</firstName><lastName>%s</lastName><email>%s</email></person><sessionKey>%s</sessionKey><joinStatus>ACCEPT</joinStatus><emailInvitations>TRUE</emailInvitations></attendees>'
-        return template % (xml_escape(self.first_name), xml_escape(self.last_name), xml_escape(self.email), self.event.session_key)
+        template = u'<attendees><person>%(first)s%(last)s%(email)s</person>%(session_key)s<joinStatus>ACCEPT</joinStatus><emailInvitations>TRUE</emailInvitations></attendees>'
+        template_bits = {
+                'first': self.first_name and '<firstName>%s</firstName>'%xml_escape(self.first_name) or '',
+                'last': self.last_name and '<lastName>%s</lastName>'%xml_escape(self.last_name) or '',
+                'email': '<email>%s</email>'%xml_escape(self.email),
+                'session_key': '<sessionKey>%s</sessionKey>'%self.event.session_key }
+        return template % template_bits
 
     def __repr__(self): return str(self)
     def __str__(self): return unicode(self).encode('utf-8')

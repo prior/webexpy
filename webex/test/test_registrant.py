@@ -20,6 +20,10 @@ class RegistrantTest(unittest2.TestCase):
         self.assertEquals('John', r.first_name)
         self.assertEquals('Smith', r.last_name)
         self.assertEquals('John Smith', r.name)
+        r = Registrant(event, first_name='', last_name='Jones', name='')
+        self.assertIsNone(r.first_name)
+        self.assertEquals('Jones', r.last_name)
+        self.assertEquals('Jones', r.name)
 
     def test_equality(self):
         event = Event.random(self.account)
@@ -190,7 +194,25 @@ class RegistrantTest(unittest2.TestCase):
         registrants_after_delete = dict((r.email,r) for r in event.get_general_registrants(True))
         self.assertIn(deleted_registrant.email, registrants_after_create)
         self.assertNotIn(deleted_registrant.email, registrants_after_delete)
+
+        #test same on a nameless registrant
+        new_registrant = Registrant.random(event)
+        new_registrant.first_name = None
+        new_registrant.last_name = None
+        new_registrant.create()
+
+        registrants_after_create = dict((r.email,r) for r in event.get_general_registrants(True))
+        self.assertNotIn(new_registrant.email, registrants)
+        self.assertIn(new_registrant.email, registrants_after_create)
+        self.assertEquals(new_registrant, registrants_after_create[new_registrant.email])
+        
+        deleted_registrant = new_registrant.delete()
+        registrants_after_delete = dict((r.email,r) for r in event.get_general_registrants(True))
+        self.assertIn(deleted_registrant.email, registrants_after_create)
+        self.assertNotIn(deleted_registrant.email, registrants_after_delete)
+
         event.delete()
+
 
     def test_batch_crud(self):
         event = Event.random(self.account).create()
