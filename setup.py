@@ -3,12 +3,12 @@ from distutils.core import setup
 
 setup(
     name='webexpy',
-    version='2.0.8',
+    version='2.0.9',
     description='Python WebEx Api Wrapper',
     author='Michael Prior',
     author_email='prior@cracklabs.com',
     url='https://github.com/prior/webexpy',
-    download_url='https://github.com/prior/webexpy/tarball/v2.0.8',
+    download_url='https://github.com/prior/webexpy/tarball/v2.0.9',
     packages=['webex'],
     install_requires=[
         'lxml==2.3.1',

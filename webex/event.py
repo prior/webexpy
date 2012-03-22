@@ -16,22 +16,22 @@ class Event(object):
         
         self.title = nstrip(mpop(kwargs, 'title', 'sessionName','confName'))
 
-        starts_at = mpop(kwargs, 'starts_at', 'startDate')
-        ends_at = mpop(kwargs, 'ends_at', 'endDate')
-        scheduled_timezone_id = nint(mpop(kwargs, 'timeZoneID', 'timezone'))
-        scheduled_timezone = scheduled_timezone_id and timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[scheduled_timezone_id]
-        self._starts_at = starts_at and sanetztime(starts_at, tz=scheduled_timezone)
-        self._ends_at = ends_at and sanetztime(ends_at, tz=scheduled_timezone)
+        self._starts_at = kwargs.pop('starts_at',None)
+        self._ends_at = kwargs.pop('ends_at',None)
+        self._started_at = kwargs.pop('started_at',None)
+        self._ended_at = kwargs.pop('ended_at',None)
 
-        started_at = mpop(kwargs, 'started_at', 'sessionStartTime')
-        ended_at = mpop(kwargs, 'ended_at', 'sessionEndTime')
-        actual_timezone_id = nint(mpop(kwargs, 'timezone', 'timeZoneID')) or scheduled_timezone_id
-        actual_timezone = actual_timezone_id and timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[actual_timezone_id]
-        self._started_at = started_at and sanetztime(started_at, tz=actual_timezone)
-        self._ended_at = ended_at and sanetztime(ended_at, tz=actual_timezone)
+        if kwargs.get('timeZoneID'):
+            tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timeZoneID'])]
+            if self._starts_at is None and kwargs.get('startDate'): self._starts_at = sanetztime(kwargs['startDate'], tz=tz)
+            if self._ends_at is None and kwargs.get('endDate'): self._ends_at = sanetztime(kwargs['endDate'], tz=tz)
+
+        if kwargs.get('timezone'):
+            tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timezone'])]
+            if self._started_at is None and kwargs.get('sessionStartTime'): self._started_at = sanetztime(kwargs['sessionStartTime']).set_tz(tz)
+            if self._ended_at is None and kwargs.get('sessionEndTime'): self._ended_at = sanetztime(kwargs['sessionEndTime']).set_tz(tz)
 
         self.duration = mpop(kwargs, 'duration') or None
-
         self.description = mpop(kwargs, 'description') or None
         self.session_key = mpop(kwargs, 'session_key', 'sessionKey')
         self.visibility = mpop(kwargs, 'listing', 'listStatus', fallback=account.meetings_must_be_unlisted and 'UNLISTED' or 'PUBLIC').strip().lower()
@@ -128,11 +128,12 @@ class Event(object):
     def duration(self): return self.scheduled_duration or self.actual_duration
     @duration.setter
     def duration(self, value):
-        if not value: return
-        if self._starts_at:
-            self._ends_at = self._starts_at + value*60*10**6
-        elif self._started_at:
-            self._ended_at = self._ends_at + value*60*10**6
+        pass # noop-- not needed -- but maybe worth doing a sanity check here? TODO
+        #if not value: return
+        #if self._starts_at and not self._ends_at:
+            #self._ends_at = self._starts_at + value*60*10**6
+        #elif self._started_at and not self._ended_at:
+            #self._ended_at = self._started_at + value*60*10**6
     
     @property
     def scheduled_duration(self): return self.starts_at and self.ends_at and (self.ends_at-self.starts_at+30*10**6)/(60*10**6)

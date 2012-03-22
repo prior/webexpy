@@ -14,12 +14,11 @@ class Registrant(object):
         self.first_name = nstrip(mpop(kwargs, 'first_name', 'firstName', 'first'))
         self.last_name = nstrip(mpop(kwargs, 'last_name', 'lastName', 'last'))
         if kwargs.get('name'): self.name = nstrip(kwargs.pop('name'))
-        timezone = kwargs.get('timezone', self.event.timezone)
         self.viewings = kwargs.pop('viewings', [])
         started_at = mpop(kwargs, 'started_at', 'startTime')
         stopped_at = mpop(kwargs, 'stopped_at', 'endTime')
         if started_at and stopped_at:
-            self._add_viewing((sanetime(started_at, tz=timezone), sanetime(stopped_at, tz=timezone)))
+            self._add_viewing((sanetime(started_at), sanetime(stopped_at)))
         self.ip_address = nstrip(mpop(kwargs, 'ip_address', 'ipAddress'))
 
     @property
