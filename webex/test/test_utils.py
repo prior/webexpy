@@ -1,8 +1,8 @@
-import unittest2
+import unittest
 from .. import utils as u
 from ..utils import lazy_property
 
-class UtilsTest(unittest2.TestCase):
+class UtilsTest(unittest.TestCase):
 
     def setUp(self): pass
     def tearDown(self): pass

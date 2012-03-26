@@ -1,11 +1,11 @@
-import unittest2
+import unittest
 from .. import error as e
 from .. import account
 from ..account import Account
 from .helper import TestHelper
 
 
-class AccountTest(unittest2.TestCase):
+class AccountTest(unittest.TestCase):
 
     def setUp(self): 
         self.th = TestHelper()
@@ -37,7 +37,7 @@ class AccountTest(unittest2.TestCase):
     def test_meetings_must_be_unlisted(self):
         self.assertFalse(self.account.meetings_must_be_unlisted)
 
-    @unittest2.skip('this can lock the account -- only running when we need to')
+    @unittest.skip('this can lock the account -- only running when we need to')
     def test_invalid_username_password(self):
         a = self.account
         with self.assertRaises(e.InvalidPasswordError): account.GetSite(Account(username=a.username, password='asdf', site_name=a.site_name)).answer

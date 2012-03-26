@@ -1,8 +1,8 @@
-import unittest2
+import unittest
 from ..error import Error
 from ..utils import reraise
 
-class ErrorTest(unittest2.TestCase):
+class ErrorTest(unittest.TestCase):
 
     def setUp(self): pass
     def tearDown(self): pass

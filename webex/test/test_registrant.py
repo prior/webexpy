@@ -1,4 +1,4 @@
-import unittest2
+import unittest
 from ..registrant import Registrant, GetGeneralRegistrants, GetAttendedRegistrants
 from ..event import Event
 from .helper import TestHelper
@@ -6,7 +6,7 @@ from ..exchange import BatchListExchange
 from ..utils import lazy_property
 from sanetime import sanetime, sanetztime
 
-class RegistrantTest(unittest2.TestCase):
+class RegistrantTest(unittest.TestCase):
 
     def setUp(self): 
         self.th = TestHelper()
@@ -97,7 +97,7 @@ class RegistrantTest(unittest2.TestCase):
     @lazy_property
     def moderate_event(self): return self._get_or_create_event(500)
 
-    @unittest2.skip('huge bulk actions: may trigger 503s')
+    @unittest.skip('huge bulk actions: may trigger 503s')
     def test_huge_crud(self):
         size = 3000
         event = Event.random(self.account).create()
@@ -139,21 +139,21 @@ class RegistrantTest(unittest2.TestCase):
             self.assertEquals(count, len(registrants))
         return registrants
 
-    @unittest2.skip('long running')
+    @unittest.skip('long running')
     def test_sync_general_registrants(self, event=None):
         ev = event or self.big_event
         registrants = ev.general_registrants
         sync_registrants = BatchListExchange(self.event, GetGeneralRegistrants, 'email', batch_size=2, overlap=1, async=False).items
         self.assertEquals(registrants, sync_registrants)
 
-    @unittest2.skip('long running')
+    @unittest.skip('long running')
     def test_sync_attended_registrants(self, event=None):
         ev = event or self.big_event
         registrants = ev.attended_registrants
         sync_registrants = BatchListExchange(self.event, GetAttendedRegistrants, 'email', batch_size=2, overlap=1, async=False).items
         self.assertEquals(registrants, sync_registrants)
 
-    @unittest2.skip('super thorough, super long test')
+    @unittest.skip('super thorough, super long test')
     def test_max_timing(self):  # against all known accounts, and all their events:
         from pprint import pprint
         max_info = (None, 0)
@@ -168,7 +168,7 @@ class RegistrantTest(unittest2.TestCase):
                     print max_info
         print max_info
 
-    @unittest2.skip('super thorough, super long test')
+    @unittest.skip('super thorough, super long test')
     def test_blanket(self):  # against all known accounts, and all their events:
         from pprint import pprint
         for k in self.th._accounts_dict.keys():

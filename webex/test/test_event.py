@@ -1,10 +1,9 @@
-import unittest2
+import unittest
 from ..event import GetListedEvents,GetHistoricalEvents,Event
 from .helper import TestHelper
 from ..exchange import BatchListExchange
-from sanetime import sanetztime
 
-class EventTest(unittest2.TestCase):
+class EventTest(unittest.TestCase):
 
     def setUp(self): 
         self.th = TestHelper()
@@ -106,13 +105,13 @@ class EventTest(unittest2.TestCase):
         self.assertEquals(keys, listed_keys | historical_keys)
 #        from pprint import pprint; pprint(events)
 
-    @unittest2.skip('sanity checks we don\'t need to run every time')
+    @unittest.skip('sanity checks we don\'t need to run every time')
     def test_sync_listed_events(self):
         events = self.account.listed_events
         sync_events = BatchListExchange(self.account, GetListedEvents, 'session_key', batch_size=2, overlap=1, async=False).items
         self.assertEquals(events, sync_events)
 
-    @unittest2.skip('sanity checks we don\'t need to run every time')
+    @unittest.skip('sanity checks we don\'t need to run every time')
     def test_sync_historical_events(self):
         events = self.account.historical_events
         sync_events = BatchListExchange(self.account, GetHistoricalEvents, 'session_key', batch_size=2, overlap=1, async=False).items

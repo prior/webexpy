@@ -16,10 +16,10 @@ class Event(object):
         
         self.title = nstrip(mpop(kwargs, 'title', 'sessionName','confName'))
 
-        self._starts_at = kwargs.pop('starts_at',None)
-        self._ends_at = kwargs.pop('ends_at',None)
-        self._started_at = kwargs.pop('started_at',None)
-        self._ended_at = kwargs.pop('ended_at',None)
+        self._starts_at = mpop(kwargs,'starts_at','_starts_at')
+        self._ends_at = mpop(kwargs,'ends_at','_ends_at')
+        self._started_at = mpop(kwargs,'started_at','_started_at')
+        self._ended_at = mpop(kwargs,'ended_at','_ended_at')
 
         if kwargs.get('timeZoneID'):
             tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timeZoneID'])]
