@@ -27,9 +27,9 @@ class AccountTest(unittest.TestCase):
         self.assertTrue(account)
 
     def test_version_info(self):
-        self.assertEquals(('WebEx XML API V5.9.0','SP1'), self.account.version_info)
-        self.assertEquals(5.9, self.account.version)
-        self.assertEquals(5, self.account.major_version)
+        self.assertEquals(('WebEx XML API V7.0.0',None), self.account.version_info)
+        self.assertEquals(7.0, self.account.version)
+        self.assertEquals(7, self.account.major_version)
 
     def test_meetings_require_password(self):
         self.assertTrue(self.account.meetings_require_password)

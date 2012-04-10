@@ -3,7 +3,7 @@ from ..registrant import Registrant, GetGeneralRegistrants, GetAttendedRegistran
 from ..event import Event
 from .helper import TestHelper
 from ..exchange import BatchListExchange
-from ..utils import lazy_property
+from ..xutils import lazy_property
 from sanetime import sanetime, sanetztime
 
 class RegistrantTest(unittest.TestCase):
@@ -110,7 +110,7 @@ class RegistrantTest(unittest.TestCase):
         self.assertEquals(registrants, expected)
         self.assertEquals(expected, actual)
         self.assertEquals(size, len(expected))
-        print "\nCREATE TIMING: %sms\nLISTING TIMING: %sms" % (after_create.ms-start.ms, after_listing.ms-after_create.ms,)
+        print "\nCREATE TIMING: %sms\nLISTING TIMING: %sms" % ((after_create-start).ms, (after_listing-after_create).ms,)
 
     def test_general_registrants(self, event=None):
         ev = event or self.moderate_event
@@ -162,7 +162,7 @@ class RegistrantTest(unittest.TestCase):
             for e in self.th[k].events:
                 started = sanetime()
                 registrants = e.registrants
-                elapsed = sanetime().s-started.s
+                elapsed = (sanetime()-started).s
                 if elapsed > max_info[1]: 
                     max_info = ("%s %s %s %s" % (e.account.site_name, e.session_key, e.title, len(registrants)), elapsed)
                     print max_info

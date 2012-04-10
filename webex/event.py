@@ -1,37 +1,38 @@
 import uuid
-from .utils import grab, nstrip, mpop, nint, find_all, nfind_str, lazy_property
+from utils.property import cached_property
+from utils.string import nstrip
+from utils.dict import mpop 
+from xutils import grab, find_all, nfind_str
 from sanetime import sanetztime,sanetime
 from . import timezone
 from .exchange import Exchange, GetListExchange, BatchListExchange, ParallelBatchListExchange
 from .registrant import GetGeneralRegistrants, GetAttendedRegistrants
 from . import exchange
 from . import registrant
+from . import mixins
 from xml.sax.saxutils import escape as xml_escape
 
 
-class Event(object):
+class Event(mixins.Event):
     def __init__(self, account, **kwargs):
         super(Event,self).__init__()
         self.account = account
-        
         self.title = nstrip(mpop(kwargs, 'title', 'sessionName','confName'))
-
         self._starts_at = mpop(kwargs,'starts_at','_starts_at')
         self._ends_at = mpop(kwargs,'ends_at','_ends_at')
         self._started_at = mpop(kwargs,'started_at','_started_at')
         self._ended_at = mpop(kwargs,'ended_at','_ended_at')
 
-        if kwargs.get('timeZoneID'):
+        if kwargs.get('timeZoneID'): # this comes from normal listing
             tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timeZoneID'])]
             if self._starts_at is None and kwargs.get('startDate'): self._starts_at = sanetztime(kwargs['startDate'], tz=tz)
             if self._ends_at is None and kwargs.get('endDate'): self._ends_at = sanetztime(kwargs['endDate'], tz=tz)
 
-        if kwargs.get('timezone'):
+        if kwargs.get('timezone'): # this comes form historical listing
             tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timezone'])]
             if self._started_at is None and kwargs.get('sessionStartTime'): self._started_at = sanetztime(kwargs['sessionStartTime']).set_tz(tz)
             if self._ended_at is None and kwargs.get('sessionEndTime'): self._ended_at = sanetztime(kwargs['sessionEndTime']).set_tz(tz)
 
-        self.duration = mpop(kwargs, 'duration') or None
         self.description = mpop(kwargs, 'description') or None
         self.session_key = mpop(kwargs, 'session_key', 'sessionKey')
         self.visibility = mpop(kwargs, 'listing', 'listStatus', fallback=account.meetings_must_be_unlisted and 'UNLISTED' or 'PUBLIC').strip().lower()
@@ -70,7 +71,7 @@ class Event(object):
     @property
     def attended_registrants(self): return self.get_attended_registrants()
 
-    @lazy_property
+    @cached_property
     def registrants(self): return self.get_registrants()
 
     def get_general_registrants(self, bust=False):
@@ -88,11 +89,11 @@ class Event(object):
             del self._attended_batch_list
         return ParallelBatchListExchange([self._general_batch_list, self._attended_batch_list]).items
 
-    @lazy_property
+    @cached_property
     def _general_batch_list(self):
         return BatchListExchange(GetGeneralRegistrants, self, 'email', batch_size=200, overlap=3)
 
-    @lazy_property
+    @cached_property
     def _attended_batch_list(self):
         return BatchListExchange(GetAttendedRegistrants, self, 'email', batch_size=50, overlap=2)
 
@@ -104,46 +105,6 @@ class Event(object):
 
 
 
-    @property
-    def starts_at(self): return self._starts_at or self._started_at
-    @starts_at.setter
-    def starts_at(self, starts_at): self._starts_at = starts_at
-    
-    @property
-    def ends_at(self): return self._ends_at or self._ended_at
-    @ends_at.setter
-    def ends_at(self, ends_at): self._ends_at = ends_at
-
-    @property
-    def started_at(self): return self._started_at or self._starts_at
-    @started_at.setter
-    def started_at(self, started_at): self._started_at = started_at
-
-    @property
-    def ended_at(self): return self._ended_at or self._ends_at
-    @ended_at.setter
-    def ended_at(self, ended_at): self._ended_at = ended_at
-
-    @property
-    def duration(self): return self.scheduled_duration or self.actual_duration
-    @duration.setter
-    def duration(self, value):
-        pass # noop-- not needed -- but maybe worth doing a sanity check here? TODO
-        #if not value: return
-        #if self._starts_at and not self._ends_at:
-            #self._ends_at = self._starts_at + value*60*10**6
-        #elif self._started_at and not self._ended_at:
-            #self._ended_at = self._started_at + value*60*10**6
-    
-    @property
-    def scheduled_duration(self): return self.starts_at and self.ends_at and (self.ends_at-self.starts_at+30*10**6)/(60*10**6)
-
-    @property
-    def actual_duration(self): return self.started_at and self.ended_at and (self.ended_at-self.started_at+30*10**6)/(60*10**6)
-
-    @property
-    def timezone(self):
-        return self.started_at and self.started_at.tz or self.stopped_at and self.stopped_at.tz or self.starts_at and self.starts_at.tz or self.stops_at and self.stops_at.tz 
 
     @property
     def upsert_xml(self):
@@ -155,7 +116,7 @@ class Event(object):
         self.account.meetings_require_password and '<sessionPassword>0000</sessionPassword>' or '',
         self.session_key and ('<sessionKey>%s</sessionKey>'%self.session_key) or '',
         self.starts_at.strftime("%m/%d/%Y %H:%M:%S"),
-        (self.ends_at-self.starts_at+30*10**6)/(60*10**6),
+        (self.ends_at-self.starts_at).m,
         timezone.get_id(self.starts_at.tz.zone),
         xml_escape(self.title),
         xml_escape(self.description))

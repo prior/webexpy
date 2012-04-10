@@ -1,6 +1,6 @@
 import unittest
-from .. import utils as u
-from ..utils import lazy_property
+from .. import xutils as u
+from ..xutils import lazy_property
 
 class UtilsTest(unittest.TestCase):
 

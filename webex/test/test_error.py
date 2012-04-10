@@ -1,6 +1,6 @@
 import unittest
 from ..error import Error
-from ..utils import reraise
+from ..xutils import reraise
 
 class ErrorTest(unittest.TestCase):
 

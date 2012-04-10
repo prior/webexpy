@@ -1,5 +1,5 @@
 import re
-from .utils import find, nfind_str, mpop, lazy_property
+from .xutils import find, nfind_str, mpop, lazy_property
 from . import error
 from .exchange import Exchange, BatchListExchange, ParallelBatchListExchange
 from .event import GetListedEvents, GetHistoricalEvents

@@ -1,5 +1,5 @@
 import uuid
-from .utils import mpop,nstrip,find,find_all,grab,nfind_str,nlower
+from .xutils import mpop,nstrip,find,find_all,grab,nfind_str,nlower
 from .exchange import Exchange, GetListExchange
 from sanetime import sanetime
 from . import error
@@ -53,7 +53,7 @@ class Registrant(object):
 
     @property
     def duration_in_minutes(self):
-        return self.stopped_at and self.started_at and (self.stopped_at.us-self.started_at.us+10**6*30)/(10**6*60) or None
+        return self.stopped_at and self.started_at and (self.stopped_at-self.started_at).m or None
 
     def merge(self, other):
         for a in ('email','first_name','last_name','ip_address','attendee_id'):

@@ -1,6 +1,6 @@
 import os
 import json
-from ..utils import lazy_property, reraise
+from ..xutils import lazy_property, reraise
 from ..account import Account
 
 TEST_ACCOUNTS_FILENAME = 'test_accounts.json'

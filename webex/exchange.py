@@ -1,6 +1,6 @@
 import requests
 import requests.async
-from .utils import find, nfind_str, nfind_int, reraise, lazy_property, grab
+from .xutils import find, nfind_str, nfind_int, reraise, lazy_property, grab
 from . import error
 from lxml import etree
 
