@@ -1,7 +1,7 @@
 from sanetime import sanetime
 
 TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label(s)
-    (0, 'GMT-12:00, Dateline (Eniwetok)'), # has no standard pytz label available
+    (0, 'GMT-12:00, Dateline (Eniwetok)', 'Pacific/Funafuti'), # guessed at standard pytz label available
     (1, 'GMT-11:00, Samoa (Samoa)', 'Pacific/Apia'), # GMT-11:00 Samoa best guess
     (2, 'GMT-10:00, Hawaii (Honolulu)', 'Pacific/Honolulu'),
     (3, 'GMT-09:00, Alaska (Anchorage)', 'America/Anchorage'),
