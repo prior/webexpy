@@ -1,5 +1,9 @@
 *.pyc
 .*.swp
 *.egg-info
+MANIFEST
+build
+dist
+docs/_build
 
 

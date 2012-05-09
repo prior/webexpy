@@ -3,7 +3,7 @@ from utils.property import cached_property
 from utils.string import nstrip
 from utils.dict import mpop 
 from xutils import grab, find_all, nfind_str
-from sanetime import sanetztime,sanetime
+from sanetime import time
 from . import timezone
 from .exchange import Exchange, GetListExchange, BatchListExchange, ParallelBatchListExchange
 from .registrant import GetGeneralRegistrants, GetAttendedRegistrants
@@ -25,13 +25,13 @@ class Event(mixins.Event):
 
         if kwargs.get('timeZoneID'): # this comes from normal listing
             tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timeZoneID'])]
-            if self._starts_at is None and kwargs.get('startDate'): self._starts_at = sanetztime(kwargs['startDate'], tz=tz)
-            if self._ends_at is None and kwargs.get('endDate'): self._ends_at = sanetztime(kwargs['endDate'], tz=tz)
+            if self._starts_at is None and kwargs.get('startDate'): self._starts_at = time(kwargs['startDate'], tz)
+            if self._ends_at is None and kwargs.get('endDate'): self._ends_at = time(kwargs['endDate'], tz)
 
         if kwargs.get('timezone'): # this comes form historical listing
             tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timezone'])]
-            if self._started_at is None and kwargs.get('sessionStartTime'): self._started_at = sanetztime(kwargs['sessionStartTime']).set_tz(tz)
-            if self._ended_at is None and kwargs.get('sessionEndTime'): self._ended_at = sanetztime(kwargs['sessionEndTime']).set_tz(tz)
+            if self._started_at is None and kwargs.get('sessionStartTime'): self._started_at = time(time(kwargs['sessionStartTime']),tz)
+            if self._ended_at is None and kwargs.get('sessionEndTime'): self._ended_at = time(time(kwargs['sessionEndTime']),tz)
 
         self.description = mpop(kwargs, 'description') or None
         self.session_key = mpop(kwargs, 'session_key', 'sessionKey')
@@ -132,7 +132,7 @@ class Event(mixins.Event):
         events = []
         for i in xrange(count or 1):
             guid = ''.join(str(uuid.uuid4()).split('-'))
-            now = sanetztime(s=sanetime().s, tz='America/New_York')
+            now = time(s=time().s,tz='America/New_York')
             events.append( Event(
                     account, 
                     title = u'unittest #%s &<>\xfc\u2603 ' % guid[:16],
