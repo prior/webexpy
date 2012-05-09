@@ -4,7 +4,7 @@ from ..event import Event
 from .helper import TestHelper
 from ..exchange import BatchListExchange
 from ..xutils import lazy_property
-from sanetime import sanetime, sanetztime
+from sanetime import time
 
 class RegistrantTest(unittest.TestCase):
 
@@ -58,12 +58,12 @@ class RegistrantTest(unittest.TestCase):
 
     def test_view_collapsing(self):
         event = Event.random(self.account)
-        r1 = Registrant(event, email="dude@hs.com",viewings=[[sanetime(s=100),sanetime(s=200)]])
-        self.assertEquals([[sanetime(s=100),sanetime(s=200)]], r1.viewings)
-        r2 = Registrant(event,email="dude@hs.com",viewings=[[sanetime(s=300),sanetime(s=400)]])
-        self.assertEquals([[sanetime(s=300),sanetime(s=400)]], r2.viewings)
+        r1 = Registrant(event, email="dude@hs.com",viewings=[[time(s=100),time(s=200)]])
+        self.assertEquals([[time(s=100),sanetime(s=200)]], r1.viewings)
+        r2 = Registrant(event,email="dude@hs.com",viewings=[[time(s=300),sanetime(s=400)]])
+        self.assertEquals([[time(s=300),sanetime(s=400)]], r2.viewings)
         r1.merge(r2)
-        self.assertEquals([[sanetime(s=100),sanetime(s=200)],[sanetime(s=300),sanetime(s=400)]], r1.viewings)
+        self.assertEquals([[time(s=100),sanetime(s=200)],[sanetime(s=300),sanetime(s=400)]], r1.viewings)
 
     def test_viewings(self):
         event = Event.random(self.account)
@@ -71,11 +71,11 @@ class RegistrantTest(unittest.TestCase):
         self.assertIsNone(r.started_at)
         self.assertIsNone(r.stopped_at)
         self.assertIsNone(r.duration_in_minutes)
-        r.merge(Registrant(event, email="dude@hs.com", viewings=[[sanetime(s=60*10),sanetime(s=60*30)]]))
+        r.merge(Registrant(event, email="dude@hs.com", viewings=[[time(s=60*10),sanetime(s=60*30)]]))
         self.assertEquals(60*10, r.started_at.s)
         self.assertEquals(60*30, r.stopped_at.s)
         self.assertEquals(20, r.duration_in_minutes)
-        r.merge(Registrant(event, email="dude@hs.com", viewings=[[sanetime(s=60*50),sanetime(s=60*55)]]))
+        r.merge(Registrant(event, email="dude@hs.com", viewings=[[time(s=60*50),sanetime(s=60*55)]]))
         self.assertEquals(60*10, r.started_at.s)
         self.assertEquals(60*55, r.stopped_at.s)
         self.assertEquals(45, r.duration_in_minutes)
@@ -87,7 +87,7 @@ class RegistrantTest(unittest.TestCase):
             if e.title == title: return e
         event = Event.random(self.account)
         event.title = title
-        event.starts_at = sanetztime('2013-01-01 00:00:00', tz='America/New_York')
+        event.starts_at = time('2013-01-01 00:00:00', tz='America/New_York')
         event.create()
         event.create_registrants(Registrant.random(event, size))
         return event
@@ -102,11 +102,11 @@ class RegistrantTest(unittest.TestCase):
         size = 3000
         event = Event.random(self.account).create()
         registrants = dict((r.email,r) for r in Registrant.random(event, size))
-        start = sanetime()
+        start = time()
         expected = dict((r.email,r) for r in event.create_registrants(registrants.values()))
-        after_create = sanetime()
+        after_create = time()
         actual = dict((r.email,r) for r in event.general_registrants)
-        after_listing = sanetime()
+        after_listing = time()
         self.assertEquals(registrants, expected)
         self.assertEquals(expected, actual)
         self.assertEquals(size, len(expected))
@@ -160,9 +160,9 @@ class RegistrantTest(unittest.TestCase):
         for k in self.th._accounts_dict.keys():
             pprint(self.th[k])
             for e in self.th[k].events:
-                started = sanetime()
+                started = time()
                 registrants = e.registrants
-                elapsed = (sanetime()-started).s
+                elapsed = (time()-started).s
                 if elapsed > max_info[1]: 
                     max_info = ("%s %s %s %s" % (e.account.site_name, e.session_key, e.title, len(registrants)), elapsed)
                     print max_info

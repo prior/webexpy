@@ -1,4 +1,4 @@
-from sanetime import sanetime
+from sanetime import time
 
 TIMEZONE_DATA = (  # webex_timezone_id, webex_timezone, python_timezone_label(s)
     (0, 'GMT-12:00, Dateline (Eniwetok)', 'Pacific/Funafuti'), # guessed at standard pytz label available
@@ -82,12 +82,12 @@ def get_id(timezone_label):
     if timezone_label in PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP:
         return PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label]
 
-    us = sanetime().us
-    dt = sanetime(us).to_naive_datetime()
-    st = sanetime(dt, tz=timezone_label)
+    us = time().us
+    dt = time(us).to_naive_datetime()
+    st = time(dt, tz=timezone_label)
     for tuple_ in TIMEZONE_DATA:
         for pytz_label in tuple_[2:]:
-            testing_st = sanetime(dt, tz=pytz_label)
+            testing_st = time(dt, tz=pytz_label)
             if st == testing_st:
                 PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label] = webex_timezone_id
                 break

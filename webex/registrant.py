@@ -1,7 +1,7 @@
 import uuid
 from .xutils import mpop,nstrip,find,find_all,grab,nfind_str,nlower
 from .exchange import Exchange, GetListExchange
-from sanetime import sanetime
+from sanetime import time
 from . import error
 from xml.sax.saxutils import escape as xml_escape
 
@@ -18,7 +18,7 @@ class Registrant(object):
         started_at = mpop(kwargs, 'started_at', 'startTime')
         stopped_at = mpop(kwargs, 'stopped_at', 'endTime')
         if started_at and stopped_at:
-            self._add_viewing((sanetime(started_at), sanetime(stopped_at)))
+            self._add_viewing((time(started_at), time(stopped_at)))
         self.ip_address = nstrip(mpop(kwargs, 'ip_address', 'ipAddress'))
 
     @property
