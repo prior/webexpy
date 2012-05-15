@@ -83,7 +83,7 @@ def get_id(timezone_label):
         return PYTZ_LABEL_TO_WEBEX_TIMEZONE_ID_MAP[timezone_label]
 
     us = time().us
-    dt = time(us).to_naive_datetime()
+    dt = time(us).naive_datetime
     st = time(dt, tz=timezone_label)
     for tuple_ in TIMEZONE_DATA:
         for pytz_label in tuple_[2:]:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from distutils.core import setup
 
-VERSION = '2.2.5'
+VERSION = '2.2.6'
 
 setup(
     name='webexpy',
