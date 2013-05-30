@@ -30,8 +30,8 @@ class Event(mixins.Event):
 
         if kwargs.get('timezone'): # this comes form historical listing
             tz = timezone.WEBEX_TIMEZONE_ID_TO_PYTZ_LABEL_MAP[int(kwargs['timezone'])]
-            if self._started_at is None and kwargs.get('sessionStartTime'): self._started_at = time(time(kwargs['sessionStartTime']),tz)
-            if self._ended_at is None and kwargs.get('sessionEndTime'): self._ended_at = time(time(kwargs['sessionEndTime']),tz)
+            if self._started_at is None and kwargs.get('sessionStartTime'): self._started_at = time(kwargs['sessionStartTime']).set_tz(tz)
+            if self._ended_at is None and kwargs.get('sessionEndTime'): self._ended_at = time(kwargs['sessionEndTime']).set_tz(tz)
 
         self.description = mpop(kwargs, 'description') or None
         self.session_key = mpop(kwargs, 'session_key', 'sessionKey')
