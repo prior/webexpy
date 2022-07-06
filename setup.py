@@ -12,5 +12,5 @@ setup(
     url='https://github.com/prior/webexpy',
     download_url='https://github.com/prior/webexpy/tarball/v%s'%VERSION,
     packages=['webex','webex.test'],
-    install_requires=[ 'lxml==2.3.1', 'nose==1.1.2']
+    install_requires=[ 'lxml==4.9.1', 'nose==1.1.2']
 )
